@@ -1,3 +1,5 @@
+@import "@radix-ui/themes/styles.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -24,10 +26,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 20px;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  backdrop-filter: unset !important;
 }
 
 a {
@@ -39,4 +51,8 @@ a {
   html {
     color-scheme: dark;
   }
+}
+
+.suggestion-item:hover {
+  background-color: var(--gray-a3);
 }
