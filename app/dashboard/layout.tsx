@@ -11,10 +11,10 @@ export default async function HomeLayout({
   children: React.ReactNode;
 }) {
   const menuItems = [
-    { href: "/home", label: "Home", icon: <HomeIcon /> },
-    { href: "/home/page1", label: "Page 1", icon: <PersonIcon /> },
+    { href: "/dashboard", label: "Home", icon: <HomeIcon /> },
+    { href: "/dashboard/page1", label: "Page 1", icon: <PersonIcon /> },
     {
-      href: "/home/page2",
+      href: "/dashboard/page2",
       label: "Page 2",
       icon: <RocketIcon />,
     },
