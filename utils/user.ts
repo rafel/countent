@@ -5,6 +5,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { NewUser, User, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import GoogleProvider from "next-auth/providers/google";
 
 declare module "next-auth" {
   interface Session {
@@ -19,7 +20,12 @@ declare module "next-auth" {
 }
 
 const authOptions: NextAuthConfig = {
-  providers: [GitHub],
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
   callbacks: {
     async signIn({ user }) {
       if (!user.email) return false;

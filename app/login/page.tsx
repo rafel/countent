@@ -1,6 +1,6 @@
 import { signIn } from "@/utils/user";
 import { Box, Button, Flex, Heading } from "@radix-ui/themes";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import { AvatarIcon } from "@radix-ui/react-icons";
 
 export default function LoginPage() {
   return (
@@ -19,12 +19,12 @@ export default function LoginPage() {
         <form
           action={async () => {
             "use server";
-            await signIn("github", { redirectTo: "/dashboard" });
+            await signIn("google", { redirectTo: "/dashboard" });
           }}
         >
           <Button type="submit" size="3" style={{ width: "100%" }}>
-            <GitHubLogoIcon />
-            Sign in with GitHub
+            <AvatarIcon />
+            Sign in with Google
           </Button>
         </form>
       </Box>

@@ -1,8 +1,9 @@
 import { Box, Flex, Heading, Link as RadixLink } from "@radix-ui/themes";
 import Link from "next/link";
 import { HomeIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
-import { ThemeToggle } from "@/app/components/themetoggle";
-import { LogoutButton } from "@/app/components/logoutbutton";
+import { UserAvatar } from "@/app/components/useravatar";
+import Image from "next/image";
+import { getUser } from "@/utils/user";
 
 export default async function HomeLayout({
   children,
@@ -19,6 +20,8 @@ export default async function HomeLayout({
     },
   ];
 
+  const user = await getUser();
+
   return (
     <Flex>
       <Box
@@ -32,8 +35,13 @@ export default async function HomeLayout({
         }}
       >
         <Box mb="5">
-          <Link href="/home">
-            <Heading as="h3" size="6">
+          <Link href="/dashboard">
+            <Heading
+              as="h3"
+              size="3"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <Image src="/logo.svg" alt="Countent" width={25} height={25} />{" "}
               Countent
             </Heading>
           </Link>
@@ -63,9 +71,8 @@ export default async function HomeLayout({
             backgroundColor: "var(--gray-a2)",
           }}
         >
-          <Flex justify="end" gap="4">
-            <ThemeToggle />
-            <LogoutButton />
+          <Flex justify="end" align="center" gap="4">
+            {user && <UserAvatar user={user} size="2" />}
           </Flex>
         </Box>
         <main style={{ flexGrow: 1, padding: "2rem" }}>{children}</main>
