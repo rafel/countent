@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ninja - Move Fast",
-  description: "We Move Fast",
+  title: "Countent - Ai",
+  description: "We Do AI",
   icons: {
     icon: [
       {
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     },
   },
   appleWebApp: {
-    title: "Ninja - Move Fast",
+    title: "Countent - AI",
   },
   manifest: "/favicon/site.webmanifest",
 };
