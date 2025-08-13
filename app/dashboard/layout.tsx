@@ -4,6 +4,23 @@ import { HomeIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
 import { UserAvatar } from "@/app/components/useravatar";
 import Image from "next/image";
 import { getUser } from "@/utils/user";
+import { redirect } from "next/navigation";
+
+import { AppSidebar } from "@/components/app-sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default async function HomeLayout({
   children,
@@ -21,62 +38,45 @@ export default async function HomeLayout({
   ];
 
   const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
 
   return (
-    <Flex>
-      <Box
-        width="250px"
-        p="4"
-        style={{
-          height: "auto",
-          minHeight: "100vh",
-          borderRight: "1px solid var(--gray-a5)",
-          backgroundColor: "var(--gray-a2)",
-        }}
-      >
-        <Box mb="5">
-          <Link href="/dashboard">
-            <Heading
-              as="h3"
-              size="3"
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            >
-              <Image src="/logo.svg" alt="Countent" width={25} height={25} />{" "}
-              Countent
-            </Heading>
-          </Link>
-        </Box>
-        <nav>
-          <Flex direction="column" gap="3">
-            {menuItems
-              .filter((item) => item !== null)
-              .map((item) => (
-                <RadixLink asChild key={item.href}>
-                  <Link href={item.href}>
-                    <Flex align="center" gap="2">
-                      {item.icon}
-                      {item.label}
-                    </Flex>
-                  </Link>
-                </RadixLink>
-              ))}
-          </Flex>
-        </nav>
-      </Box>
-      <Flex direction="column" style={{ flexGrow: 1 }}>
-        <Box
-          p="4"
-          style={{
-            borderBottom: "1px solid var(--gray-a5)",
-            backgroundColor: "var(--gray-a2)",
-          }}
-        >
-          <Flex justify="end" align="center" gap="4">
-            {user && <UserAvatar user={user} size="2" />}
-          </Flex>
-        </Box>
-        <main style={{ flexGrow: 1, padding: "2rem" }}>{children}</main>
-      </Flex>
-    </Flex>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Building Your Application
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+            <div className="bg-muted/50 aspect-video rounded-xl" />
+            <div className="bg-muted/50 aspect-video rounded-xl" />
+            <div className="bg-muted/50 aspect-video rounded-xl" />
+          </div>
+          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

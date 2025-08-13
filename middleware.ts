@@ -1,7 +1,7 @@
-import { auth } from "@/utils/user";
+import { auth, getUser } from "@/utils/user";
 import { NextResponse } from "next/server";
 
-export default auth((req) => {
+export default auth(async (req) => {
   const isLoggedIn = !!req.auth;
   const isLoginPage = req.nextUrl.pathname.startsWith("/login");
   const isIndexPage = req.nextUrl.pathname === "/";
@@ -12,10 +12,6 @@ export default auth((req) => {
 
   if (!isLoggedIn && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  if (isLoggedIn && isLoginPage) {
-    return NextResponse.redirect(new URL("/", req.url));
   }
   if (isLoggedIn && isIndexPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));

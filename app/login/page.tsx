@@ -1,33 +1,19 @@
-import { signIn } from "@/utils/user";
-import { Box, Button, Flex, Heading } from "@radix-ui/themes";
-import { AvatarIcon } from "@radix-ui/react-icons";
+import { GalleryVerticalEnd } from "lucide-react";
+
+import { LoginForm } from "@/components/login-form";
 
 export default function LoginPage() {
   return (
-    <Flex align="center" justify="center" style={{ height: "100vh" }}>
-      <Box
-        p="6"
-        style={{
-          background: "var(--gray-a2)",
-          borderRadius: "var(--radius-4)",
-          border: "1px solid var(--gray-a5)",
-        }}
-      >
-        <Heading align="center" mb="5">
-          Countent
-        </Heading>
-        <form
-          action={async () => {
-            "use server";
-            await signIn("google", { redirectTo: "/dashboard" });
-          }}
-        >
-          <Button type="submit" size="3" style={{ width: "100%" }}>
-            <AvatarIcon />
-            Sign in with Google
-          </Button>
-        </form>
-      </Box>
-    </Flex>
+    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <a href="#" className="flex items-center gap-2 self-center font-medium">
+          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+            <GalleryVerticalEnd className="size-4" />
+          </div>
+          Acme Inc.
+        </a>
+        <LoginForm />
+      </div>
+    </div>
   );
 }
