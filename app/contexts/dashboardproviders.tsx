@@ -3,11 +3,11 @@ import { ThemeProvider } from "./themeprovider";
 import { LanguageProvider } from "./languageprovider";
 import { Language } from "./languageprovider";
 
-interface ServerProvidersProps {
+interface DashboardProvidersProps {
   children: React.ReactNode;
 }
 
-export async function ServerProviders({ children }: ServerProvidersProps) {
+export async function DashboardProviders({ children }: DashboardProvidersProps) {
   // Fetch user data server-side for initial theme/language only
   const user = await getUser();
   

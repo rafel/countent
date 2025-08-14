@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/app/components/ui/alert";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { AlertCircleIcon } from "lucide-react";
+import { useLanguage } from "@/hooks/uselanguage";
 
 export function LoginForm({
   className,
@@ -24,6 +25,7 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { ttt } = useLanguage();
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -32,16 +34,16 @@ export function LoginForm({
       await signIn("google", { redirectTo: "/dashboard" });
     } catch (error) {
       console.error("Google login error:", error);
-      setError("Failed to sign in with Google. Please try again.");
+      setError(ttt("Failed to sign in with Google. Please try again."));
       setIsLoading(false);
     }
   };
 
-    const handlePasswordLogin = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(""); // Clear any previous errors
-    
+
     try {
       const result = await signIn("credentials", {
         email,
@@ -49,24 +51,30 @@ export function LoginForm({
         redirectTo: "/dashboard",
         redirect: false,
       });
-      
+
       if (result?.error) {
         console.error("Login failed:", result.error);
         // Handle different types of errors
         if (result.error === "CredentialsSignin") {
-          setError("Invalid email or password. Please check your credentials and try again.");
+          setError(
+            ttt(
+              "Invalid email or password. Please check your credentials and try again."
+            )
+          );
         } else {
-          setError("An error occurred during sign in. Please try again.");
+          setError(ttt("An error occurred during sign in. Please try again."));
         }
       } else if (result?.ok) {
         // Successful login
         window.location.href = "/dashboard";
       } else {
-        setError("An unexpected error occurred. Please try again.");
+        setError(ttt("An unexpected error occurred. Please try again."));
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Network error. Please check your connection and try again.");
+      setError(
+        ttt("Network error. Please check your connection and try again.")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -76,9 +84,9 @@ export function LoginForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardTitle className="text-xl">{ttt("Welcome back")}</CardTitle>
           <CardDescription>
-            Login with your Google account or email and password
+            {ttt("Login with your Google account or email and password")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,12 +95,10 @@ export function LoginForm({
             {error && (
               <Alert variant="destructive">
                 <AlertCircleIcon />
-                <AlertDescription>
-                  {error}
-                </AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             {/* Google Login Button */}
             <div className="flex flex-col gap-4">
               <Button
@@ -108,14 +114,14 @@ export function LoginForm({
                     fill="currentColor"
                   />
                 </svg>
-                Login with Google
+                {ttt("Login with Google")}
               </Button>
             </div>
 
             {/* Separator */}
             <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
               <span className="bg-card text-muted-foreground relative z-10 px-2">
-                Or continue with
+                {ttt("Or continue with")}
               </span>
             </div>
 
@@ -123,7 +129,7 @@ export function LoginForm({
             <form onSubmit={handlePasswordLogin}>
               <div className="grid gap-6">
                 <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{ttt("Email")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -135,12 +141,12 @@ export function LoginForm({
                 </div>
                 <div className="grid gap-3">
                   <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{ttt("Password")}</Label>
                     <a
                       href="#"
                       className="ml-auto text-sm underline-offset-4 hover:underline"
                     >
-                      Forgot your password?
+                      {ttt("Forgot your password?")}
                     </a>
                   </div>
                   <Input
@@ -152,23 +158,24 @@ export function LoginForm({
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Login"}
+                  {isLoading ? ttt("Signing in...") : ttt("Login")}
                 </Button>
               </div>
             </form>
 
             <div className="text-center text-sm">
-              Don&apos;t have an account?{" "}
+              {ttt("Don't have an account?")}{" "}
               <a href="#" className="underline underline-offset-4">
-                Sign up
+                {ttt("Sign up")}
               </a>
             </div>
           </div>
         </CardContent>
       </Card>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        {ttt("By clicking continue, you agree to our")}{" "}
+        <a href="#">{ttt("Terms of Service")}</a> {ttt("and")}{" "}
+        <a href="#">{ttt("Privacy Policy")}</a>.
       </div>
     </div>
   );

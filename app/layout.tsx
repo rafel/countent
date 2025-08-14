@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { SessionProvider } from "next-auth/react";
-import { ServerProviders } from "@/app/contexts/serverproviders";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,7 +50,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider>
-          <ServerProviders>{children}</ServerProviders>
+          {children}
         </SessionProvider>
       </body>
     </html>

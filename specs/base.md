@@ -33,7 +33,7 @@ vaul
 * user/components/*.tsx for components uses in user and subpages 
 * user/functions/actions.ts for all serverside functions, also for user and subpages
 * user/functions/utils.ts for util functions, also for user and subpages
-- /components and /utils are for files that is needed globaly e.g. not just user (meny, check userlogin etc).
+- /app/components and /utils are for files that is needed globaly e.g. not just user (meny, check userlogin etc).
 - all hooks should always be inside /hooks
 
 

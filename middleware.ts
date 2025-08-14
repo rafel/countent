@@ -13,9 +13,9 @@ export default auth(async (req) => {
   if (!isLoggedIn && !isLoginPage) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
-  if (isLoggedIn && isIndexPage) {
+  /*if (isLoggedIn && isIndexPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
+  }*/
 });
 
 // Optionally, don't invoke Middleware on some paths
