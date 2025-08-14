@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbclient } from "@/db/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { verifyPassword } from "@/utils/password";
+import { verifyPassword } from "@/utils/auth";
 
 export async function POST(request: NextRequest) {
   try {

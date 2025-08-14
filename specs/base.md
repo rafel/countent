@@ -6,39 +6,41 @@ This project Countent - Your AI accountent
 - PSQL
 
 # Stack instructions:
-- Do not read anything inside node_modules
-- Use Radix UI default theme and ui, avoid wrapper components unless needed
-- There is .env file, dont read it
+- Do not read anything inside node_modules or .env file
+- We are using shadcn UI, all components are downloaded inside app/components/ui
 - If we create a table (users) the primary id should be called userid (not only id)
+- If you are performing a task and there is "similar" files, like tables or paths, read a sample file to understand the syntax, logic as we want similar things to have same structure
 
-# Libs:
-@radix-ui/react-icons
-@radix-ui/themes
-@supabase/supabase-js
-date-fns
-drizzle-kit
-drizzle-orm
-drizzle-zod
-next
+# Some useful libs installed:
 radix-ui
-react
-react-dom
+date-fns
+drizzle
+next
 zod
+clsx
+lucide-react
+tailwindcss
+use-debounce
+vaul
 
 # Folder structures
 - Default Nextjs structure
-- /db should have all psql sql codes (use drizzle, have a ts file and a sql file)
-- use @ alias when importing (check tsconfig.json). If file in the same path or below, we can use relative
+- DB logic inside /db/ and there is /db/tables, drizzle (read file if unsure of strucutre)
+- use @ alias when importing. If file in the same path or below, we can use relative
 - All files must always be lowercased
+- A page can have the following structure (only if needed):
+* user/page.tsx
+* user/components/*.tsx for components uses in user and subpages 
+* user/functions/actions.ts for all serverside functions, also for user and subpages
+* user/functions/utils.ts for util functions, also for user and subpages
+- /components and /utils are for files that is needed globaly e.g. not just user (meny, check userlogin etc).
+- all hooks should always be inside /hooks
+
 
 In summary:
 We can login, check upload and log out
 
 Do not:
-- Don't get stuck if you run npm run dev (as it build nextjs and waits). If you run it and want me to do something tell me it. But make sure you dont get stuck and i need to escape and exit you
-- Do not run Drizzle migrations etc. i do the migrations manually. update/create sql file.
-- dont forget to use awaited params, example on error i get Error: Route "/dashboard/users/[userid]/edit" used `params.userid`. `params` should be awaited before using its properties.
-    at EditUserPage (app/dashboard/users/[userid]/edit/page.tsx:8:36)
-   6 |
-   7 | export default async function EditUserPage({ params }: { params: { userid: string } }) {
->  8 |   const user = await getUser(params.userid);
+- If you need to download i lib, ask me or give suggetions and i can download them seperatly and ask you to continue
+- Do not run Drizzle migrations etc. i do the migrations manually
+- NextJS params should always be awaited, e.g: ...UserPage({ params }: { params: Promise<{ userid: string }>;})const { userid } = await params;..

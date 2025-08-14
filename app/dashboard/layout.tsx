@@ -1,12 +1,7 @@
-import { Box, Flex, Heading, Link as RadixLink } from "@radix-ui/themes";
-import Link from "next/link";
-import { HomeIcon, PersonIcon, RocketIcon } from "@radix-ui/react-icons";
-import { UserAvatar } from "@/app/components/useravatar";
-import Image from "next/image";
 import { getUser } from "@/utils/user";
 import { redirect } from "next/navigation";
 
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/app/components/sidebar/sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,29 +9,19 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
+} from "@/app/components/ui/breadcrumb";
+import { Separator } from "@/app/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/app/components/ui/sidebar";
 
 export default async function HomeLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const menuItems = [
-    { href: "/dashboard", label: "Home", icon: <HomeIcon /> },
-    { href: "/dashboard/page1", label: "Page 1", icon: <PersonIcon /> },
-    {
-      href: "/dashboard/page2",
-      label: "Page 2",
-      icon: <RocketIcon />,
-    },
-  ];
-
   const user = await getUser();
   if (!user) {
     redirect("/login");
@@ -44,7 +29,7 @@ export default async function HomeLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={user} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

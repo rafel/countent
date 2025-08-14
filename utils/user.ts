@@ -144,3 +144,4 @@ export const getUser = cache(async (): Promise<User | null> => {
 
   return dbUser[0];
 });
+
