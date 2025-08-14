@@ -1,4 +1,8 @@
 export const enTranslations = {
+  'ServiceName': 'Countent',
+  'ServiceSlogan': 'AI Content Creation',
+  'ServiceDescription':
+    'Countent is an AI content creation service that uses the latest AI models to create content for your business.',
   'Select language': 'Select language',
   'Playground': 'Playground',
   'History': 'History',
@@ -68,6 +72,13 @@ export const enTranslations = {
   'Terms of Service': 'Terms of Service',
   'and': 'and',
   'Privacy Policy': 'Privacy Policy',
-  'Don\'t have an account?': 'Don\'t have an account?'} as const;
+  'Don\'t have an account?': 'Don\'t have an account?',
+  'Pricing': 'Pricing',
+  'Features': 'Features',
+  'Enterprise': 'Enterprise',
+  'Blog': 'Blog',
+  'System': 'System',
+  'Open menu': 'Open menu',
+  'All rights reserved': 'All rights reserved'} as const;
 
 export default enTranslations;

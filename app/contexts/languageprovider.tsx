@@ -50,34 +50,53 @@ interface LanguageProviderProps {
   initialLanguage?: Language;
 }
 
-export function LanguageProvider({ children, initialLanguage }: LanguageProviderProps) {
+export function LanguageProvider({
+  children,
+  initialLanguage,
+}: LanguageProviderProps) {
   const { data: session } = useSession();
-  const [language, setLanguageState] = useState<Language>(initialLanguage || "en");
-  const [isLoaded, setIsLoaded] = useState(!!initialLanguage);
+  const [language, setLanguageState] = useState<Language>(
+    initialLanguage || "en"
+  );
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load saved language preference from database when user session is available
-  // Only if we don't have an initial language value
+  // Load saved language preference from localStorage first, then database
   useEffect(() => {
     let isMounted = true;
 
     const loadLanguage = async () => {
       try {
-        // Only fetch from database if we don't have an initial language
-        if (session?.user && !initialLanguage) {
-          const response = await fetch('/api/user/preferences', {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
-            if (isMounted && userData.language && 
-                (userData.language === "en" || userData.language === "sv")) {
-              setLanguageState(userData.language);
+        // First check localStorage for immediate loading (both logged-in and anonymous users)
+        if (!initialLanguage) {
+          const storedLanguage = localStorage.getItem("language");
+          if (storedLanguage === "en" || storedLanguage === "sv") {
+            if (isMounted) {
+              setLanguageState(storedLanguage);
             }
           }
         }
-        
+
+        // Then fetch from database if user is logged in (will override localStorage if different)
+        if (session?.user && !initialLanguage) {
+          const response = await fetch("/api/user/preferences", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            if (
+              isMounted &&
+              userData.language &&
+              (userData.language === "en" || userData.language === "sv")
+            ) {
+              setLanguageState(userData.language);
+              // Also update localStorage to match database
+              localStorage.setItem("language", userData.language);
+            }
+          }
+        }
+
         if (isMounted) {
           setIsLoaded(true);
         }
@@ -89,7 +108,8 @@ export function LanguageProvider({ children, initialLanguage }: LanguageProvider
       }
     };
 
-    if (session !== undefined) { // Wait for session to be determined
+    if (session !== undefined) {
+      // Wait for session to be determined
       loadLanguage();
     }
 
@@ -98,12 +118,17 @@ export function LanguageProvider({ children, initialLanguage }: LanguageProvider
     };
   }, [session, initialLanguage]);
 
-  // Set language and save to database
+  // Set language and save to database or localStorage
   const setLanguage = useCallback(
     async (lang: Language) => {
       try {
         // Update state immediately
         setLanguageState(lang);
+
+        // Save to localStorage for all users (fallback for non-logged in)
+        if (typeof window !== "undefined") {
+          localStorage.setItem("language", lang);
+        }
 
         // Save to database if user is logged in
         if (session?.user) {

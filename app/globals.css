@@ -44,6 +44,7 @@ a {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-bg: var(--background);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -120,6 +121,7 @@ a {
   --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+  --navbar-height: 64px;
 }
 
 .dark {
@@ -130,6 +132,7 @@ a {
   --popover: #121212;
   --popover-foreground: #ffffff;
   --primary: #ffffff;
+  --text-foreground: #000000;
   --primary-foreground: #000000;
   --secondary: #222222;
   --secondary-foreground: #ffffff;
@@ -164,6 +167,7 @@ a {
   --shadow-lg: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 4px 6px -1px hsl(0 0% 0% / 0.18);
   --shadow-xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 8px 10px -1px hsl(0 0% 0% / 0.18);
   --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
+  --navbar-height: 64px;
 }
 @layer base {
   * {

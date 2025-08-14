@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe, Palette } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import {
   DropdownMenu,
@@ -47,8 +47,10 @@ export function GeneralSettings() {
         return ttt("Light");
       case "dark":
         return ttt("Dark");
+      case "system":
+        return ttt("System");
       default:
-        return "light";
+        return ttt("System");
     }
   };
 
@@ -62,9 +64,12 @@ export function GeneralSettings() {
             <Button
               variant="outline"
               size="sm"
-              className="min-w-[100px] justify-between"
+              className="min-w-[100px] justify-between gap-2"
             >
-              {getThemeLabel()}
+              <div className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                {getThemeLabel()}
+              </div>
               <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
@@ -74,6 +79,9 @@ export function GeneralSettings() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleThemeChange("dark")}>
               {ttt("Dark")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleThemeChange("system")}>
+              {ttt("System")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -87,9 +95,12 @@ export function GeneralSettings() {
             <Button
               variant="outline"
               size="sm"
-              className="min-w-[100px] justify-between"
+              className="min-w-[100px] justify-between gap-2"
             >
-              {currentLanguage?.title || "English"}
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                {currentLanguage?.title || "English"}
+              </div>
               <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>

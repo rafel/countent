@@ -1,6 +1,9 @@
 import { enTranslations } from "@/content/en/index";
 
 export const svTranslations: Record<keyof typeof enTranslations, string> = {
+  'ServiceSlogan': 'AI Innehållsgenerering',
+  'ServiceDescription': 'Countent är en AI-innehållsgenereringstjänst som använder de senaste AI-modellerna för att skapa innehåll för ditt företag.',
+  'ServiceName': 'Countent AI',
   'Select language': 'Välj språk',
   'Playground': 'Spelplats',
   'History': 'Historik',
@@ -70,6 +73,13 @@ export const svTranslations: Record<keyof typeof enTranslations, string> = {
   'Terms of Service': 'Användarvillkor',
   'and': 'och',
   'Privacy Policy': 'Integritetspolicy',
-  'Don\'t have an account?': 'Har du inget konto?'} as const;
+  'Don\'t have an account?': 'Har du inget konto?',
+  'Pricing': 'Pris',
+  'Features': 'Funktioner',
+  'Enterprise': 'Företag',
+  'Blog': 'Blogg',
+  'System': 'System',
+  'Open menu': 'Öppna meny',
+  'All rights reserved': 'Alla rättigheter reserverade'} as const;
 
 export default svTranslations;

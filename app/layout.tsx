@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { SessionProvider } from "next-auth/react";
+import { DashboardProviders } from "@/app/contexts/dashboardproviders";
+import { commonSettings } from "@/content/common";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +17,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Countent - Ai",
-  description: "We Do AI",
+  title: commonSettings.siteTitle,
+  description: commonSettings.siteDescription,
+  keywords: commonSettings.siteKeywords,
+  metadataBase: new URL(commonSettings.siteUrl),
+  openGraph: {
+    title: commonSettings.siteTitle,
+    description: commonSettings.siteDescription,
+    images: [
+      {
+        url: commonSettings.siteImage,
+        width: commonSettings.siteImageWidth,
+        height: commonSettings.siteImageHeight,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: commonSettings.siteTitle,
+    description: commonSettings.siteDescription,
+    images: [
+      {
+        url: commonSettings.siteImage,
+        width: commonSettings.siteImageWidth,
+        height: commonSettings.siteImageHeight,
+      },
+    ],
+  },
+  alternates: {
+    canonical: commonSettings.siteUrl,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       {
@@ -36,7 +70,7 @@ export const metadata: Metadata = {
     },
   },
   appleWebApp: {
-    title: "Countent - AI",
+    title: commonSettings.siteTitle,
   },
   manifest: "/favicon/site.webmanifest",
 };
@@ -50,7 +84,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider>
-          {children}
+          <DashboardProviders>{children}</DashboardProviders>
         </SessionProvider>
       </body>
     </html>

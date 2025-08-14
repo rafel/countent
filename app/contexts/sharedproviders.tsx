@@ -1,15 +1,14 @@
 import { getUser } from "@/utils/user";
-import { ThemeProvider } from "./themeprovider";
 import { LanguageProvider } from "./languageprovider";
 import { Language } from "./languageprovider";
 
-interface DashboardProvidersProps {
+interface SharedProvidersProps {
   children: React.ReactNode;
 }
 
-export async function DashboardProviders({
+export async function SharedProviders({
   children,
-}: DashboardProvidersProps) {
+}: SharedProvidersProps) {
   // Fetch user data server-side for initial theme/language only
   const user = await getUser();
 
@@ -17,11 +16,10 @@ export async function DashboardProviders({
   const initialTheme = user?.theme || "system";
   // Only pass initialLanguage if user is logged in, otherwise let localStorage take precedence
   const initialLanguage = user?.language as Language;
-  console.log(initialLanguage);
 
   return (
     <LanguageProvider initialLanguage={initialLanguage}>
-      <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
+      {children}
     </LanguageProvider>
   );
 }
