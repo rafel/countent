@@ -12,8 +12,6 @@ export async function SharedProviders({
   // Fetch user data server-side for initial theme/language only
   const user = await getUser();
 
-  // Extract user preferences or use defaults
-  const initialTheme = user?.theme || "system";
   // Only pass initialLanguage if user is logged in, otherwise let localStorage take precedence
   const initialLanguage = user?.language as Language;
 

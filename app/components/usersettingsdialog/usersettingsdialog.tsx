@@ -31,7 +31,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/app/components/ui/sidebar";
 import { Button } from "@/app/components/ui/button";
 import { useIsMobile } from "@/hooks/usemobile";

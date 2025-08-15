@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dbclient } from "@/db/db";
-import { users } from "@/db/schema";
+import { UserPreferences, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/utils/user";
+import { LANGUAGES } from "@/app/contexts/languageprovider";
 
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user preferences
@@ -26,10 +24,7 @@ export async function GET() {
       .limit(1);
 
     if (user.length === 0) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(user[0]);
@@ -60,8 +55,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (language && !LANGUAGES.map((l) => l.id).includes(language)) {
+      return NextResponse.json(
+        { error: "Invalid language value" },
+        { status: 400 }
+      );
+    }
+
     // Update user preferences
-    const updateData: any = {};
+    const updateData: UserPreferences = {};
     if (theme !== undefined) updateData.theme = theme;
     if (language !== undefined) updateData.language = language;
 

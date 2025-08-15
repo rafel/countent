@@ -5,7 +5,8 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Theme } from "@radix-ui/themes";
 import { useSession } from "next-auth/react";
 
-interface ThemeProviderProps extends React.ComponentProps<typeof NextThemesProvider> {
+interface ThemeProviderProps
+  extends React.ComponentProps<typeof NextThemesProvider> {
   initialTheme?: string;
 }
 
@@ -58,24 +59,6 @@ function RadixThemeWrapper({ children }: { children: React.ReactNode }) {
 
     return () => observer.disconnect();
   }, []);
-
-  // Sync theme changes to database
-  const syncThemeToDatabase = React.useCallback(
-    async (theme: string) => {
-      if (!session?.user) return;
-
-      try {
-        await fetch("/api/user/preferences", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ theme }),
-        });
-      } catch (error) {
-        console.error("Failed to sync theme to database:", error);
-      }
-    },
-    [session]
-  );
 
   // Load user's saved theme on mount
   React.useEffect(() => {

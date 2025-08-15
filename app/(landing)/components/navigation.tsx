@@ -25,7 +25,7 @@ export function Navigation() {
   const { ttt } = useLanguage();
   const isMobile = useIsMobile();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { theme, resolvedTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   return (
     <nav className="fixed top-4 z-[9999] w-full lg:top-6">
