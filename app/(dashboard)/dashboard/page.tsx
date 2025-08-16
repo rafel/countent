@@ -1,12 +1,31 @@
-export default function Home() {
-  return (
-    <>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-      </div>
-      <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
-    </>
-  );
+import { getUser } from "@/utils/user";
+import { getUserCompanies } from "@/app/(dashboard)/dashboard/[companyid]/functions/actions";
+import { getPendingInvitesForUser } from "@/app/(dashboard)/dashboard/invites/functions/actions";
+import { redirect } from "next/navigation";
+
+export default async function Home() {
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Check for pending invites first
+  const pendingInvites = await getPendingInvitesForUser(user.email);
+  
+  // If user has pending invites, redirect to invites page
+  if (pendingInvites && pendingInvites.length > 0) {
+    redirect("/dashboard/invites");
+  }
+
+  const userCompanies = await getUserCompanies(user.userid);
+
+  // If user has no companies, redirect to new company creation
+  if (!userCompanies || userCompanies.length === 0) {
+    redirect("/dashboard/new");
+  }
+
+  // If user has companies, redirect to the first company's dashboard
+  const firstCompany = userCompanies[0];
+  redirect(`/dashboard/${firstCompany.companyid}`);
 }

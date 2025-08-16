@@ -2,12 +2,9 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
   BookOpen,
   Bot,
-  Command,
   Frame,
-  GalleryVerticalEnd,
   Map,
   PieChart,
   Settings2,
@@ -17,7 +14,7 @@ import {
 import { NavMain } from "@/app/components/sidebar/nav-main";
 import { NavProjects } from "@/app/components/sidebar/nav-projects";
 import { NavUser } from "@/app/components/sidebar/nav-user";
-import { TeamSwitcher } from "@/app/components/sidebar/team-switcher";
+import { CompanySwitcher } from "@/app/components/sidebar/company-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -28,33 +25,22 @@ import {
 import { User } from "@/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
 import { useLanguage } from "@/hooks/uselanguage";
-
-// This is sample data.
+import { Company } from "@/db/tables/company";
 
 export function AppSidebar({
   user,
+  currentCompanyId,
+  companies = [],
   ...props
-}: React.ComponentProps<typeof Sidebar> & { user: User }) {
-  const [openSettings, setOpenSettings] = React.useState(false);
+}: React.ComponentProps<typeof Sidebar> & {
+  user: User;
+  currentCompanyId?: string;
+  companies?: Company[];
+}) {
   const { ttt } = useLanguage();
+  const [openSettings, setOpenSettings] = React.useState(false);
+
   const data = {
-    teams: [
-      {
-        name: "Acme Inc",
-        logo: GalleryVerticalEnd,
-        plan: "Enterprise",
-      },
-      {
-        name: "Acme Corp.",
-        logo: AudioWaveform,
-        plan: "Startup",
-      },
-      {
-        name: "Evil Corp.",
-        logo: Command,
-        plan: "Free",
-      },
-    ],
     navMain: [
       {
         title: ttt("Playground"),
@@ -119,27 +105,10 @@ export function AppSidebar({
         ],
       },
       {
-        title: ttt("Settings"),
+        title: ttt("Company Settings"),
         url: "#",
         icon: Settings2,
-        items: [
-          {
-            title: ttt("General"),
-            url: "#",
-          },
-          {
-            title: ttt("Team"),
-            url: "#",
-          },
-          {
-            title: ttt("Billing"),
-            url: "#",
-          },
-          {
-            title: ttt("Limits"),
-            url: "#",
-          },
-        ],
+        isCompanySettings: true,
       },
     ],
     projects: [
@@ -160,13 +129,17 @@ export function AppSidebar({
       },
     ],
   };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <CompanySwitcher
+          companies={companies}
+          currentCompanyId={currentCompanyId}
+        />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.navMain} currentCompanyId={currentCompanyId} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>

@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "migrate": "drizzle-kit generate",
     "migrate-dry": "drizzle-kit check",
-    "migrate": "drizzle-kit push",
+    "migrate-push": "drizzle-kit push",
     "tsc": "npx tsc",
     "translate": "npx tsx scripts/translate.ts"
   },
@@ -44,6 +45,7 @@
     "@radix-ui/themes": "^3.2.1",
     "@supabase/supabase-js": "^2.51.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/typed.js": "^2.0.9",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -70,6 +72,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
+    "typed-js": "^0.2.3",
+    "typed.js": "^2.1.0",
     "use-debounce": "^10.0.5",
     "vaul": "^1.1.2",
     "zod": "^4.0.17"

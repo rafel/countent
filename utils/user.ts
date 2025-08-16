@@ -2,8 +2,8 @@ import NextAuth, { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { dbclient } from "@/db/db";
 import { cache } from "react";
-import { NewUser, User, users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { NewUser, User, users, companies, companyUsers } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import GoogleProvider from "next-auth/providers/google";
 
 declare module "next-auth" {
@@ -17,6 +17,9 @@ declare module "next-auth" {
     };
   }
 }
+
+// Note: Invite activation is now handled through the /dashboard/invites page
+// This allows users to review and accept/decline invitations manually
 
 const authOptions: NextAuthConfig = {
   providers: [
@@ -144,4 +147,3 @@ export const getUser = cache(async (): Promise<User | null> => {
 
   return dbUser[0];
 });
-

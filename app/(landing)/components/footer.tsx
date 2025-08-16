@@ -55,8 +55,8 @@ export function Footer() {
 
   return (
     <footer className="container-full  px-4 pt-[calc(var(--navbar-height)+32px)] text-brand-white dark:text-brand-black md:px-6 lg:pt-[calc(var(--navbar-height)+48px)] mb-0 pb-0">
-      <div className="relative flex flex-col justify-start mx-auto gap-4 pt-12 h-full max-w-[1808px] overflow-hidden rounded-t-2xl text-center md:justify-between md:gap-6 border-2 border-b-0">
-        <div className="mx-auto box-border max-w-[1672px] px-6 md:px-9">
+      <div className="relative flex flex-col justify-start mx-auto gap-4 pt-12 h-full max-w-[1600px] overflow-hidden rounded-t-2xl text-center md:justify-between md:gap-6 border-2 border-b-0">
+        <div className="mx-auto box-border max-w-[1600px] px-6 md:px-9">
           <div className="flex flex-col gap-8 py-10">
             {/* Logo */}
             <div className="flex flex-col items-center justify-center gap-2">
@@ -172,12 +172,6 @@ export function Footer() {
                     className="hover:text-foreground transition-colors"
                   >
                     {ttt("Sign up")}
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {ttt("Dashboard")}
                   </Link>
                 </div>
               </div>

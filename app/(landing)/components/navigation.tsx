@@ -29,7 +29,7 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-4 z-[9999] w-full lg:top-6">
-      <div className="mx-auto box-border max-w-[1672px] px-6 md:px-9">
+      <div className="mx-auto box-border max-w-[1600px] px-6 md:px-9">
         <div className="relative flex h-[var(--navbar-height)] w-full items-center justify-between rounded-lg border border-transparent bg-background px-4 py-2">
           <Link
             aria-label={ttt("ServiceName")}
