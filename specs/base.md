@@ -43,6 +43,7 @@ vaul
 - Add new translation keys to both content/en/index.ts and content/sv/index.ts when needed
 - Import useLanguage hook: `import { useLanguage } from "@/hooks/uselanguage";`
 - Usage pattern: `const { ttt } = useLanguage(); <Label>{ttt("Field Name")}</Label>`
+- As we need to translate everything, try to homonize (Delete, remove, move to trash etc can be all Remove) and keep messages short. 
 
 # Database Patterns
 - Primary keys: tablename + "id" (e.g., userid, companyid)
@@ -51,6 +52,7 @@ vaul
 - Add exports to /db/schema.ts: `export * from "./tables/tablename";`
 - Many-to-many relationships: create junction tables (e.g., companyUsers)
 - Use proper foreign key constraints with onDelete: "cascade"
+- All the objects and types are defined in the db/tables. Always check there and import then (for current and new object)
 
 # Client/Server Separation - CRITICAL
 - **NEVER import database utilities in client components** (causes TLS/Node.js import errors)

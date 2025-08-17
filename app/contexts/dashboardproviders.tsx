@@ -17,7 +17,6 @@ export async function DashboardProviders({
   const initialTheme = user?.theme || "system";
   // Only pass initialLanguage if user is logged in, otherwise let localStorage take precedence
   const initialLanguage = user?.language as Language;
-  console.log(initialLanguage);
 
   return (
     <LanguageProvider initialLanguage={initialLanguage}>

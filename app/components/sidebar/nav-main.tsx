@@ -19,10 +19,12 @@ import {
   SidebarMenuSubItem,
 } from "@/app/components/ui/sidebar";
 import { CompanySettingsDialog } from "@/app/components/companysettingsdialog/companysettingsdialog";
+import { useLanguage } from "@/hooks/uselanguage";
+import { Company } from "@/db/tables/company";
 
 export function NavMain({
   items,
-  currentCompanyId,
+  currentCompany,
 }: {
   items: {
     title: string;
@@ -30,18 +32,24 @@ export function NavMain({
     icon?: LucideIcon;
     isActive?: boolean;
     isCompanySettings?: boolean;
-    items?: {
-      title: string;
-      url: string;
-      isCompanySettings?: boolean;
-    }[];
+    items?:
+      | {
+          title: string;
+          url: string;
+          isCompanySettings?: boolean;
+        }[]
+      | undefined;
   }[];
-  currentCompanyId?: string;
+  currentCompany: Company;
 }) {
   const [companySettingsOpen, setCompanySettingsOpen] = useState(false);
-
-  const handleItemClick = (item: { title: string; url: string; isCompanySettings?: boolean }) => {
-    if (item.isCompanySettings && currentCompanyId) {
+  const { ttt } = useLanguage();
+  const handleItemClick = (item: {
+    title: string;
+    url: string;
+    isCompanySettings?: boolean;
+  }) => {
+    if (item.isCompanySettings) {
       setCompanySettingsOpen(true);
     } else {
       // Handle regular navigation
@@ -52,16 +60,16 @@ export function NavMain({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel>{ttt("Platform")}</SidebarGroupLabel>
         <SidebarMenu>
           {items.map((item) => {
             // If it's a company settings item, render as direct button
-            if (item.isCompanySettings) {
+            if (item.isCompanySettings || !item.items) {
               return (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    onClick={() => handleItemClick(item)}
+                  <SidebarMenuButton
                     tooltip={item.title}
+                    onClick={() => handleItemClick(item)}
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
@@ -70,7 +78,7 @@ export function NavMain({
               );
             }
 
-            // Regular collapsible items
+            // Regular items with potential sub-items
             return (
               <Collapsible
                 key={item.title}
@@ -90,9 +98,13 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton 
+                          <SidebarMenuSubButton
                             asChild={!subItem.isCompanySettings}
-                            onClick={subItem.isCompanySettings ? () => handleItemClick(subItem) : undefined}
+                            onClick={
+                              subItem.isCompanySettings
+                                ? () => handleItemClick(subItem)
+                                : undefined
+                            }
                           >
                             {subItem.isCompanySettings ? (
                               <span>{subItem.title}</span>
@@ -114,13 +126,11 @@ export function NavMain({
       </SidebarGroup>
 
       {/* Company Settings Dialog */}
-      {currentCompanyId && (
-        <CompanySettingsDialog
+              <CompanySettingsDialog
           open={companySettingsOpen}
           onOpenChange={setCompanySettingsOpen}
-          companyId={currentCompanyId}
+          company={currentCompany}
         />
-      )}
     </>
   );
 }

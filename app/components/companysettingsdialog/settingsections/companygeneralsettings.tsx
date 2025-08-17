@@ -1,15 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/app/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -17,96 +11,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
-import { Checkbox } from "@/app/components/ui/checkbox";
+import { useFormStatus } from "react-dom";
 import { useLanguage } from "@/hooks/uselanguage";
-import { getCompanyById, updateCompany } from "../functions/actions";
+import { updateCompany } from "../functions/actions";
+import { Company } from "@/db/tables/company";
 
-export function CompanyGeneralSettings({ companyId }: { companyId: string }) {
+function SubmitButton() {
+  const { pending } = useFormStatus();
   const { ttt } = useLanguage();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? ttt("Saving...") : ttt("Save Changes")}
+    </Button>
+  );
+}
+
+export function CompanyGeneralSettings({ company }: { company: Company }) {
+  const { ttt } = useLanguage();
+  const [formData, setFormData] = useState(company);
   const [error, setError] = useState<string | null>(null);
-  const [companyData, setCompanyData] = useState({
-    name: "",
-    orgnumber: "",
-    type: "",
-    vatnumber: "",
-    email: "",
-    phone: "",
-    contactperson: "",
-    addressline1: "",
-    addressline2: "",
-    postalcode: "",
-    city: "",
-    fiscalyearstart: "",
-    fiscalyearend: "",
-    vatreportingperiod: "",
-    accountingmethod: "",
-    hasfirstannualreport: false,
-  });
 
-  // Fetch company data when companyId changes
-  useEffect(() => {
-    async function fetchCompanyData() {
-      if (companyId) {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const company = await getCompanyById(companyId);
-          if (company) {
-            setCompanyData({
-              name: company.name || "",
-              orgnumber: company.orgnumber || "",
-              type: company.type || "",
-              vatnumber: company.vatnumber || "",
-              email: company.email || "",
-              phone: company.phone || "",
-              contactperson: company.contactperson || "",
-              addressline1: company.addressline1 || "",
-              addressline2: company.addressline2 || "",
-              postalcode: company.postalcode || "",
-              city: company.city || "",
-              fiscalyearstart: company.fiscalyearstart || "",
-              fiscalyearend: company.fiscalyearend || "",
-              vatreportingperiod: company.vatreportingperiod || "",
-              accountingmethod: company.accountingmethod || "",
-              hasfirstannualreport: company.hasfirstannualreport || false,
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching company data:", error);
-          setError(ttt("Failed to load company data"));
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
+  async function handleSubmit(submitData: FormData) {
+    const data = {
+      name: submitData.get("name") as string,
+      orgnumber: submitData.get("orgnumber") as string,
+      type: submitData.get("type") as string,
+    };
 
-    fetchCompanyData();
-  }, [companyId, ttt]);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError(null);
     try {
-      const result = await updateCompany(companyId, companyData);
-      if (!result.success) {
+      const result = await updateCompany(company.companyid, data);
+      if (result.success) {
+        setFormData({ ...formData, ...data });
+        setError(null);
+      } else {
         setError(ttt("Failed to save company data"));
       }
     } catch (error) {
-      console.error("Error saving company data:", error);
       setError(ttt("Failed to save company data"));
-    } finally {
-      setIsSaving(false);
     }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <div className="text-muted-foreground">{ttt("Loading company data...")}</div>
-      </div>
-    );
   }
 
   return (
@@ -114,59 +56,52 @@ export function CompanyGeneralSettings({ companyId }: { companyId: string }) {
       {error && (
         <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
           {error}
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2 h-6"
+            onClick={() => setError(null)}
+          >
+            {ttt("Dismiss")}
+          </Button>
         </div>
       )}
 
-      {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{ttt("Basic Information")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <form action={handleSubmit} className="space-y-0">
+        {/* Basic Information */}
+        <div className="pb-4">
+          <h3 className="text-lg font-medium">{ttt("Basic Information")}</h3>
+          <p className="text-sm text-muted-foreground">
+            {ttt("Essential company details and registration information")}
+          </p>
+        </div>
+
+        <div className="space-y-4 border-b pb-6">
           <div className="space-y-2">
-            <Label htmlFor="company-name">{ttt("Company Name")} *</Label>
+            <Label htmlFor="name">{ttt("Company Name")} *</Label>
             <Input
-              id="company-name"
-              value={companyData.name}
-              onChange={(e) =>
-                setCompanyData({ ...companyData, name: e.target.value })
-              }
+              id="name"
+              name="name"
+              placeholder={ttt("Enter company name")}
+              defaultValue={formData.name || ""}
+              required
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="org-number">{ttt("Organization Number")} *</Label>
-              <Input
-                id="org-number"
-                value={companyData.orgnumber}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, orgnumber: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vat-number">
-                {ttt("VAT Registration Number")}
-              </Label>
-              <Input
-                id="vat-number"
-                value={companyData.vatnumber}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, vatnumber: e.target.value })
-                }
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="orgnumber">{ttt("Organization Number")} *</Label>
+            <Input
+              id="orgnumber"
+              name="orgnumber"
+              placeholder={ttt("Enter organization number")}
+              defaultValue={formData.orgnumber || ""}
+              required
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company-type">{ttt("Company Type")} *</Label>
-            <Select
-              value={companyData.type}
-              onValueChange={(value) =>
-                setCompanyData({ ...companyData, type: value })
-              }
-            >
+            <Label htmlFor="type">{ttt("Company Type")} *</Label>
+            <Select name="type" defaultValue={formData.type || ""}>
               <SelectTrigger>
                 <SelectValue placeholder={ttt("Select Company Type")} />
               </SelectTrigger>
@@ -190,189 +125,12 @@ export function CompanyGeneralSettings({ companyId }: { companyId: string }) {
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Contact Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{ttt("Contact Information")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="company-email">{ttt("Email")}</Label>
-              <Input
-                id="company-email"
-                type="email"
-                value={companyData.email}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, email: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-phone">{ttt("Phone")}</Label>
-              <Input
-                id="company-phone"
-                value={companyData.phone}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, phone: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="contact-person">{ttt("Contact Person")}</Label>
-            <Input
-              id="contact-person"
-              value={companyData.contactperson}
-              onChange={(e) =>
-                setCompanyData({
-                  ...companyData,
-                  contactperson: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address1">{ttt("Address")}</Label>
-            <Input
-              id="address1"
-              value={companyData.addressline1}
-              onChange={(e) =>
-                setCompanyData({ ...companyData, addressline1: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address2">{ttt("Address Line 2")}</Label>
-            <Input
-              id="address2"
-              value={companyData.addressline2}
-              onChange={(e) =>
-                setCompanyData({ ...companyData, addressline2: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="postal-code">{ttt("Postal Code")}</Label>
-              <Input
-                id="postal-code"
-                value={companyData.postalcode}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, postalcode: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">{ttt("City")}</Label>
-              <Input
-                id="city"
-                value={companyData.city}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, city: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Accounting Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{ttt("Accounting Settings")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fiscal-year-start">{ttt("Fiscal Year Start")}</Label>
-              <Input
-                id="fiscal-year-start"
-                type="date"
-                value={companyData.fiscalyearstart}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, fiscalyearstart: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fiscal-year-end">{ttt("Fiscal Year End")}</Label>
-              <Input
-                id="fiscal-year-end"
-                type="date"
-                value={companyData.fiscalyearend}
-                onChange={(e) =>
-                  setCompanyData({ ...companyData, fiscalyearend: e.target.value })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="vat-reporting-period">{ttt("VAT Reporting Period")}</Label>
-            <Select
-              value={companyData.vatreportingperiod}
-              onValueChange={(value) =>
-                setCompanyData({ ...companyData, vatreportingperiod: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={ttt("Select VAT Reporting Period")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yearly">{ttt("Yearly")}</SelectItem>
-                <SelectItem value="quarterly">{ttt("Quarterly")}</SelectItem>
-                <SelectItem value="monthly">{ttt("Monthly")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accounting-method">{ttt("Accounting Method")}</Label>
-            <Select
-              value={companyData.accountingmethod}
-              onValueChange={(value) =>
-                setCompanyData({ ...companyData, accountingmethod: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={ttt("Select Accounting Method")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="invoice">{ttt("Invoice Method")}</SelectItem>
-                <SelectItem value="cash">{ttt("Cash Method")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="first-annual-report"
-              checked={companyData.hasfirstannualreport}
-              onCheckedChange={(checked) =>
-                setCompanyData({ ...companyData, hasfirstannualreport: !!checked })
-              }
-            />
-            <Label htmlFor="first-annual-report">
-              {ttt("Company has completed at least one annual report")}
-            </Label>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? ttt("Saving...") : ttt("Save Changes")}
-        </Button>
-      </div>
+        <div className="pt-6">
+          <SubmitButton />
+        </div>
+      </form>
     </div>
   );
 }

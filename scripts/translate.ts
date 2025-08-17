@@ -13,8 +13,8 @@ async function extractTranslationKeys() {
   // Use the glob promise API
   const files = await globModule.glob('app/**/*.{ts,tsx}', { ignore: ['app/content/**/*'] });
   
-  // Enhanced regex to capture more patterns including template literals
-  const translationKeyRegex = /ttt\(['"]([^'"]+)['"](?:\)|,)|ttt\(`([^`]+)`(?:\)|,)|`[^`]*\$\{ttt\(['"]([^'"]+)['"]\)[^`]*`/g;
+  // Enhanced regex to capture ttt() calls with double quotes, handling escaped quotes and apostrophes
+  const translationKeyRegex = /ttt\("([^"\\]*(?:\\.[^"\\]*)*)"\)/g;
   
   const keys = new Set<string>();
 
@@ -23,8 +23,7 @@ async function extractTranslationKeys() {
     let match;
     
     while ((match = translationKeyRegex.exec(content)) !== null) {
-      // The key could be in any of the capture groups
-      const key = match[1] || match[2] || match[3];
+      const key = match[1].replace(/\\"/g, '"'); // Unescape double quotes
       if (key) {
         keys.add(key);
       }
@@ -40,13 +39,13 @@ function parseTranslations(filePath: string): Record<string, string> {
     const content = fs.readFileSync(filePath, 'utf8');
     const result: Record<string, string> = {};
     
-    // Use regex to find all key-value pairs
-    const keyValueRegex = /'([^']+)':\s*'([^']*)'/g;
+    // Updated regex to handle escaped quotes in keys and values
+    const keyValueRegex = /'([^'\\]*(?:\\.[^'\\]*)*)'\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g;
     let match;
     
     while ((match = keyValueRegex.exec(content)) !== null) {
-      const key = match[1];
-      const value = match[2];
+      const key = match[1].replace(/\\'/g, "'"); // Unescape single quotes in key
+      const value = match[2].replace(/\\'/g, "'"); // Unescape single quotes in value
       result[key] = value;
     }
     
@@ -55,6 +54,11 @@ function parseTranslations(filePath: string): Record<string, string> {
     console.error(`Error reading file ${filePath}:`, e);
     return {};
   }
+}
+
+// Helper function to escape single quotes for TypeScript string literals
+function escapeForTSString(str: string): string {
+  return str.replace(/'/g, "\\'");
 }
 
 // Function to update translation files
@@ -86,13 +90,15 @@ function updateTranslationFiles(keys: string[]) {
       const closingBracePos = fileContent.lastIndexOf('}');
       
       if (closingBracePos !== -1) {
-        // Format new translations
+        // Format new translations with proper escaping
         const newTranslationsStr = newKeys
           .map(key => {
+            const escapedKey = escapeForTSString(key);
             if (lang === 'en') {
-              return `  '${key}': '${key}'`;
+              const escapedValue = escapeForTSString(key);
+              return `  '${escapedKey}': '${escapedValue}'`;
             } else if (lang === 'sv') {
-              return `  '${key}': ''`;
+              return `  '${escapedKey}': ''`;
             }
             return '';
           })

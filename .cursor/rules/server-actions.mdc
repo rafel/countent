@@ -1,0 +1,56 @@
+# Server Actions Best Practices
+
+## Required Pattern
+All server actions must follow this exact pattern:
+
+```typescript
+"use server";
+
+export async function actionName(formData: FormData) {
+  try {
+    const user = await getUser();
+    if (!user) return { success: false, error: "User not authenticated" };
+    
+    // validation and logic here
+    
+    return { success: true, data: result };
+  } catch (error) {
+    return { success: false, error: "Error message" };
+  }
+}
+```
+
+## Critical Rules
+
+### 🚨 NEVER put `redirect()` inside try-catch blocks
+**This causes NEXT_REDIRECT errors!**
+
+```typescript
+// ❌ WRONG - causes NEXT_REDIRECT error
+try {
+  // logic
+  redirect('/dashboard');
+} catch (error) {
+  // This breaks redirect functionality
+}
+
+// ✅ CORRECT - handle redirects separately
+try {
+  // validation and logic
+  return { success: true };
+} catch (error) {
+  return { success: false, error: "Error message" };
+}
+// Handle redirect in calling component based on success
+```
+
+## Required Practices
+- Always start with `"use server";` directive
+- Return success/error objects from actions
+- Handle redirects in the calling component, not in the action
+- Validate required fields with proper error messages
+- Use `getUserCompanies()` utility for user-company relationships
+- Reference [utils/](mdc:utils/) for available utilities
+
+## File Location
+Server actions belong in `functions/actions.ts` files within their respective feature directories.

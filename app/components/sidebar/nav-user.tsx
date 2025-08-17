@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
+  Settings,
+  HelpCircle,
   LogOut,
   Sparkles,
 } from "lucide-react";
@@ -102,16 +101,12 @@ export function NavUser({
                 onClick={() => onOpenSettings(true)}
                 className="cursor-pointer"
               >
-                <BadgeCheck />
-                {ttt("Account")}
+                <Settings />
+                {ttt("Account Settings")}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
-                {ttt("Billing")}
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                {ttt("Notifications")}
+                <HelpCircle />
+                {ttt("Help")}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

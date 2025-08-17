@@ -5,12 +5,6 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/app/components/ui/card";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -44,13 +38,12 @@ import {
   AlertDialogTitle,
 } from "@/app/components/ui/alert-dialog";
 import {
-  MoreHorizontal,
   Crown,
   Shield,
   User,
   Mail,
   Trash2,
-  UserCog,
+  MoreHorizontal,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/uselanguage";
 import {
@@ -60,6 +53,7 @@ import {
   removeUserFromCompany,
   updateUserRole,
 } from "../functions/actions";
+import { LoadingSpinner } from "@/app/components/ui/loading";
 
 interface CompanyUser {
   userid: string;
@@ -155,7 +149,6 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
   };
 
   const canInvite = ["owner", "admin"].includes(currentUserRole);
-  // Cannot invite as owner - ownership transfer only available for existing members
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) return;
@@ -254,9 +247,7 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="text-muted-foreground">
-          {ttt("Loading team data...")}
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -277,189 +268,186 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
         </div>
       )}
 
-      {/* Team Members */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <UserCog className="h-5 w-5" />
-            {ttt("Team")} Members ({users.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="space-y-0">
+        {/* Team Members Section */}
+        <div className="pb-4">
+          <h3 className="text-lg font-medium">
+            {ttt("Team Members")} ({users.length})
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {ttt("Manage team members and their roles")}
+          </p>
+        </div>
+
+        <div className="border-b pb-6">
           {users.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {ttt("No team members found")}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{ttt("Name")}</TableHead>
-                  <TableHead>{ttt("Email")}</TableHead>
-                  <TableHead>{ttt("Role")}</TableHead>
-                  <TableHead className="text-right">{ttt("Actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.companyuserid}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {getRoleIcon(user.role)}
-                        {user.name || "No Name"}
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {user.canManage && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {/* Role change options */}
-                            {user.role !== "admin" &&
-                              currentUserRole === "owner" && (
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleRoleChange(user.userid, "admin")
-                                  }
-                                >
-                                  <Shield className="h-4 w-4 mr-2" />
-                                  {ttt("Make Admin")}
-                                </DropdownMenuItem>
-                              )}
-                            {user.role !== "user" && (
+            <div className="space-y-3">
+              {users.map((user) => (
+                <div
+                  key={user.companyuserid}
+                  className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    {getRoleIcon(user.role)}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {user.email}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={getRoleBadgeVariant(user.role)}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </Badge>
+                    {user.canManage && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {/* Role change options */}
+                          {user.role !== "admin" &&
+                            currentUserRole === "owner" && (
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleRoleChange(user.userid, "user")
+                                  handleRoleChange(user.userid, "admin")
                                 }
                               >
-                                <User className="h-4 w-4 mr-2" />
-                                {ttt("Make User")}
+                                <Shield className="h-4 w-4 mr-2" />
+                                {ttt("Make Admin")}
                               </DropdownMenuItem>
                             )}
-                            {user.role !== "owner" &&
-                              currentUserRole === "owner" && (
-                                <DropdownMenuItem
-                                  onClick={() => setUserToPromote(user)}
-                                >
-                                  <Crown className="h-4 w-4 mr-2" />
-                                  {ttt("Transfer Ownership")}
-                                </DropdownMenuItem>
-                              )}
-                            <DropdownMenuSeparator />
+                          {user.role !== "user" && (
                             <DropdownMenuItem
-                              onClick={() => setUserToRemove(user)}
-                              className="text-destructive"
+                              onClick={() =>
+                                handleRoleChange(user.userid, "user")
+                              }
                             >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {ttt("Remove")}
+                              <User className="h-4 w-4 mr-2" />
+                              {ttt("Make User")}
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          )}
+                          {user.role !== "owner" &&
+                            currentUserRole === "owner" && (
+                              <DropdownMenuItem
+                                onClick={() => setUserToPromote(user)}
+                              >
+                                <Crown className="h-4 w-4 mr-2" />
+                                {ttt("Transfer Ownership")}
+                              </DropdownMenuItem>
+                            )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setUserToRemove(user)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {ttt("Remove")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Pending Invitations */}
-      {pendingInvites.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {ttt("Pending Invitations")} ({pendingInvites.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{ttt("Email")}</TableHead>
-                  <TableHead>{ttt("Role")}</TableHead>
-                  <TableHead>{ttt("Invited By")}</TableHead>
-                  <TableHead>{ttt("Date")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pendingInvites.map((invite) => (
-                  <TableRow key={invite.inviteid}>
-                    <TableCell>{invite.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(invite.role)}>
-                        {invite.role.charAt(0).toUpperCase() +
-                          invite.role.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {invite.inviterName || invite.inviterEmail}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(invite.createdat).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+        {/* Pending Invitations Section */}
+        {pendingInvites.length > 0 && (
+          <>
+            <div className="pt-6 pb-4">
+              <h3 className="text-lg font-medium">
+                {ttt("Pending Invitations")} ({pendingInvites.length})
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {ttt("Users who have been invited but haven't accepted yet")}
+              </p>
+            </div>
 
-      {/* Invite New Member */}
-      {canInvite && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{ttt("Invite New Member")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="invite-email">{ttt("Email Address")} *</Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  placeholder={ttt("Enter email address")}
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
+            <div className="space-y-3 border-b pb-6">
+              {pendingInvites.map((invite) => (
+                <div
+                  key={invite.inviteid}
+                  className="flex items-center justify-between p-3 bg-muted/20 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex flex-col">
+                      <span className="font-medium">{invite.email}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {ttt("Invited by")}{" "}
+                        {invite.inviterName || invite.inviterEmail} •{" "}
+                        {new Date(invite.createdat).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant={getRoleBadgeVariant(invite.role)}>
+                    {invite.role.charAt(0).toUpperCase() + invite.role.slice(1)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Invite New Member Section */}
+        {canInvite && (
+          <>
+            <div className="pt-6 pb-4">
+              <h3 className="text-lg font-medium">
+                {ttt("Invite New Member")}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {ttt("Send an invitation to add someone to your team")}
+              </p>
+            </div>
+
+            <div className="space-y-4 pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">{ttt("Email Address")} *</Label>
+                  <Input
+                    id="invite-email"
+                    type="email"
+                    placeholder={ttt("Enter email address")}
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">{ttt("Role")}</Label>
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={ttt("Select Role")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">{ttt("Admin")}</SelectItem>
+                      <SelectItem value="user">{ttt("User")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="invite-role">{ttt("Role")}</Label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={ttt("Select Role")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">{ttt("Admin")}</SelectItem>
-                    <SelectItem value="user">{ttt("User")}</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleInvite}
+                  disabled={isInviting || !inviteEmail.trim()}
+                >
+                  {isInviting ? ttt("Sending...") : ttt("Send Invitation")}
+                </Button>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={handleInvite}
-                disabled={isInviting || !inviteEmail.trim()}
-              >
-                {isInviting ? ttt("Sending...") : ttt("Send Invitation")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </>
+        )}
+      </div>
 
       {/* Remove User Confirmation Dialog */}
       <AlertDialog
@@ -472,7 +460,7 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
             <AlertDialogDescription>
               {ttt("Are you sure you want to remove")}{" "}
               {userToRemove?.name || userToRemove?.email}{" "}
-              {ttt("from this company? This action cannot be undone.")}
+              {ttt("from this company?")} {ttt("This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -486,6 +474,7 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       {/* Transfer Ownership Confirmation Dialog */}
       <AlertDialog
         open={!!userToPromote}
@@ -497,7 +486,8 @@ export function CompanyTeam({ companyId }: { companyId: string }) {
             <AlertDialogDescription>
               {ttt("Are you sure you want to transfer ownership to")}{" "}
               {userToPromote?.name || userToPromote?.email}?{" "}
-              {ttt("You will become an admin and lose owner privileges. This action cannot be undone.")}
+              {ttt("You will become an admin and lose owner privileges.")}{" "}
+              {ttt("This action cannot be undone.")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

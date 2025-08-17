@@ -1,0 +1,36 @@
+# Translation System Rules
+
+## 🌍 Translation Requirements
+**ALL user-facing text must use `ttt()` function with English tezt**
+
+## NEVER Edit Translation Files
+- **NEVER edit files inside [content/](mdc:content/)** - user handles translations separately.
+
+## Usage Pattern
+```typescript
+import { useLanguage } from "@/hooks/uselanguage";
+
+export function Component({username}) {
+  const { ttt } = useLanguage();
+  
+  return (
+    <div>
+      <Label>{ttt("Field Name")}</Label>
+      <Button>{ttt("Save Changes")}</Button>
+      <p>{ttt("Error message text")}</p>
+      <p>{ttt("Welcome back")}: {username}, ${ttt("Good to see you")}</p>
+    </div>
+  );
+}
+```
+
+## Translation Key Guidelines
+- Write all keys in **English**
+- Keep messages **short and consistent**
+- Harmonize similar actions (Delete/Remove/Move to trash → all use "Remove")
+
+## Error Handling
+- **API errors are for logs only** - never forward to frontend and show the user
+- Always use `ttt()` for user-facing error messages. Reuse general error messages like (Something went wrong).
+- Example: `return { success: false, error: ttt("Authentication failed") }`
+

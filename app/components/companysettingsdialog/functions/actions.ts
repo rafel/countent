@@ -5,6 +5,7 @@ import {
   companies,
   companyUsers,
   companyInvites,
+  companyUserDuties,
   users,
   Company,
 } from "@/db/schema";
@@ -435,5 +436,60 @@ export async function getPendingInvites(companyId: string) {
   } catch (error) {
     console.error("Error fetching pending invites:", error);
     return [];
+  }
+}
+
+export async function deleteCompany(
+  companyId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    // Check if user is owner of the company
+    const userRole = await getUserRole(companyId, user.userid);
+    if (userRole !== "owner") {
+      return { 
+        success: false, 
+        error: "Only company owners can delete the company" 
+      };
+    }
+
+    // Delete related data in correct order (due to foreign key constraints)
+    // 1. Delete company invites
+    await dbclient
+      .delete(companyInvites)
+      .where(eq(companyInvites.companyid, companyId));
+
+    // 2. Delete company user duties (if any exist)
+    const companyUserIds = await dbclient
+      .select({ companyuserid: companyUsers.companyuserid })
+      .from(companyUsers)
+      .where(eq(companyUsers.companyid, companyId));
+
+    if (companyUserIds.length > 0) {
+      await dbclient
+        .delete(companyUserDuties)
+        .where(
+          eq(companyUserDuties.companyuserid, companyUserIds[0].companyuserid)
+        );
+    }
+
+    // 3. Delete company users
+    await dbclient
+      .delete(companyUsers)
+      .where(eq(companyUsers.companyid, companyId));
+
+    // 4. Finally delete the company
+    await dbclient
+      .delete(companies)
+      .where(eq(companies.companyid, companyId));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting company:", error);
+    return { success: false, error: "Failed to delete company" };
   }
 }

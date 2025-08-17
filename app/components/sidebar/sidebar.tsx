@@ -6,8 +6,9 @@ import {
   Bot,
   Frame,
   Map,
+  MessageCircle,
   PieChart,
-  Settings2,
+  Settings,
   SquareTerminal,
 } from "lucide-react";
 
@@ -26,6 +27,7 @@ import { User } from "@/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
 import { useLanguage } from "@/hooks/uselanguage";
 import { Company } from "@/db/tables/company";
+import { NavChats } from "./nav-chats";
 
 export function AppSidebar({
   user,
@@ -40,66 +42,51 @@ export function AppSidebar({
   const { ttt } = useLanguage();
   const [openSettings, setOpenSettings] = React.useState(false);
 
+  // Find the current company
+  const currentCompany = companies.find(c => c.companyid === currentCompanyId);
+
   const data = {
     navMain: [
       {
-        title: ttt("Playground"),
-        url: "#",
+        title: ttt("My transactions"),
+        url: "/dashboard/transactions",
         icon: SquareTerminal,
         isActive: true,
-        items: [
-          {
-            title: ttt("History"),
-            url: "#",
-          },
-          {
-            title: ttt("Starred"),
-            url: "#",
-          },
-          {
-            title: ttt("Settings"),
-            url: "#",
-          },
-        ],
       },
       {
-        title: ttt("Models"),
+        title: ttt("Invoices"),
         url: "#",
         icon: Bot,
         items: [
           {
-            title: ttt("Genesis"),
+            title: ttt("Invoices"),
             url: "#",
           },
           {
-            title: ttt("Explorer"),
+            title: ttt("Offers"),
             url: "#",
           },
           {
-            title: ttt("Quantum"),
+            title: ttt("Customers"),
             url: "#",
           },
         ],
       },
       {
-        title: ttt("Documentation"),
+        title: ttt("Salaries"),
         url: "#",
         icon: BookOpen,
         items: [
           {
-            title: ttt("Introduction"),
+            title: ttt("Salaries"),
             url: "#",
           },
           {
-            title: ttt("Get Started"),
+            title: ttt("Employees"),
             url: "#",
           },
           {
-            title: ttt("Tutorials"),
-            url: "#",
-          },
-          {
-            title: ttt("Changelog"),
+            title: ttt("Outlays"),
             url: "#",
           },
         ],
@@ -107,25 +94,8 @@ export function AppSidebar({
       {
         title: ttt("Company Settings"),
         url: "#",
-        icon: Settings2,
+        icon: Settings,
         isCompanySettings: true,
-      },
-    ],
-    projects: [
-      {
-        name: ttt("Design Engineering"),
-        url: "#",
-        icon: Frame,
-      },
-      {
-        name: ttt("Sales & Marketing"),
-        url: "#",
-        icon: PieChart,
-      },
-      {
-        name: ttt("Travel"),
-        url: "#",
-        icon: Map,
       },
     ],
   };
@@ -139,8 +109,13 @@ export function AppSidebar({
         />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} currentCompanyId={currentCompanyId} />
-        <NavProjects projects={data.projects} />
+        {currentCompany && (
+          <NavMain 
+            items={data.navMain} 
+            currentCompany={currentCompany}
+          />
+        )}
+        <NavChats />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} onOpenSettings={setOpenSettings} />

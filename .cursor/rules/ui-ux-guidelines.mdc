@@ -1,0 +1,58 @@
+# UI/UX Guidelines & Design Patterns
+
+## Responsive Design
+- **Mobile-first responsive design** - always consider mobile first
+- Use Tailwind CSS responsive prefixes (`sm:`, `md:`, `lg:`, `xl:`)
+
+## Spacing Patterns
+- `space-y-6` for sections
+- `space-y-2` for form fields
+- Consistent spacing throughout the application
+
+## Form Design
+- Distinguish between **required** and **optional** fields
+- Use proper field validation and error states
+- Collapsible sections for non-essential information
+
+## Component Usage
+Reference [app/components/ui/](mdc:app/components/ui/) for available shadcn/ui components:
+- Use consistent shadcn/ui component patterns
+- Import from `@/components/ui/[component-name]`
+- Follow established component APIs
+
+## Loading & Error States
+- Always implement loading states for async operations
+- Proper error handling with user-friendly messages
+- Use `ttt()` for all error messages (never forward API errors)
+
+## Interactive Elements
+- Consistent button styles and states
+- Proper hover and focus states
+- Accessibility considerations (ARIA labels, keyboard navigation)
+
+## Layout Patterns
+- Consistent header/sidebar layout
+- Proper content spacing and hierarchy
+- Use of cards and sections for content organization
+
+## Example Component Structure
+```tsx
+"use client";
+import { useLanguage } from "@/hooks/uselanguage";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+export function ExampleComponent() {
+  const { ttt } = useLanguage();
+  
+  return (
+    <Card className="space-y-6">
+      <div className="space-y-2">
+        <h2>{ttt("Section Title")}</h2>
+        <p>{ttt("Section description")}</p>
+      </div>
+      <Button>{ttt("Action Button")}</Button>
+    </Card>
+  );
+}
+```
