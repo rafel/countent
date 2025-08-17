@@ -127,7 +127,10 @@ export async function updateCompany(
       .limit(1);
 
     if (!userAccess || userAccess.length === 0) {
-      return { success: false, error: "You no longer have access to this company" };
+      return {
+        success: false,
+        error: "You no longer have access to this company",
+      };
     }
 
     await dbclient
@@ -219,10 +222,14 @@ export async function inviteUserToCompany(
       };
     }
 
-      // Cannot invite as owner - ownership can only be transferred to existing members
-  if (role === "owner") {
-    return { success: false, error: "Cannot invite new users as owner. Ownership can only be transferred to existing team members." };
-  }
+    // Cannot invite as owner - ownership can only be transferred to existing members
+    if (role === "owner") {
+      return {
+        success: false,
+        error:
+          "Cannot invite new users as owner. Ownership can only be transferred to existing team members.",
+      };
+    }
 
     // Check if user is already a member
     const existingUser = await dbclient
@@ -439,6 +446,78 @@ export async function getPendingInvites(companyId: string) {
   }
 }
 
+export async function getCurrentUserRole(
+  companyId: string
+): Promise<{ role: string | null; error?: string }> {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return { role: null, error: "User not authenticated" };
+    }
+
+    const userRole = await getUserRole(companyId, user.userid);
+    return { role: userRole };
+  } catch (error) {
+    console.error("Error getting current user role:", error);
+    return { role: null, error: "Failed to get user role" };
+  }
+}
+
+export async function leaveTeam(
+  companyId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await getUser();
+    if (!user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    // Check if user is owner of the company
+    const userRole = await getUserRole(companyId, user.userid);
+    if (userRole === "owner") {
+      return {
+        success: false,
+        error:
+          "Company owners cannot leave the team. You must transfer ownership first or delete the company.",
+      };
+    }
+
+    // Verify user is actually a member of this company
+    const userMembership = await dbclient
+      .select()
+      .from(companyUsers)
+      .where(
+        and(
+          eq(companyUsers.companyid, companyId),
+          eq(companyUsers.userid, user.userid)
+        )
+      )
+      .limit(1);
+
+    if (!userMembership || userMembership.length === 0) {
+      return {
+        success: false,
+        error: "You are not a member of this company",
+      };
+    }
+
+    // Remove user from company
+    await dbclient
+      .delete(companyUsers)
+      .where(
+        and(
+          eq(companyUsers.companyid, companyId),
+          eq(companyUsers.userid, user.userid)
+        )
+      );
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error leaving team:", error);
+    return { success: false, error: "Failed to leave team" };
+  }
+}
+
 export async function deleteCompany(
   companyId: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -451,9 +530,9 @@ export async function deleteCompany(
     // Check if user is owner of the company
     const userRole = await getUserRole(companyId, user.userid);
     if (userRole !== "owner") {
-      return { 
-        success: false, 
-        error: "Only company owners can delete the company" 
+      return {
+        success: false,
+        error: "Only company owners can delete the company",
       };
     }
 
@@ -483,9 +562,7 @@ export async function deleteCompany(
       .where(eq(companyUsers.companyid, companyId));
 
     // 4. Finally delete the company
-    await dbclient
-      .delete(companies)
-      .where(eq(companies.companyid, companyId));
+    await dbclient.delete(companies).where(eq(companies.companyid, companyId));
 
     return { success: true };
   } catch (error) {

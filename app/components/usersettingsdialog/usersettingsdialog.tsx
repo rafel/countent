@@ -2,18 +2,8 @@
 
 import * as React from "react";
 import {
-  Bell,
-  Check,
-  Globe,
-  Home,
-  Keyboard,
-  Link,
-  Lock,
-  Menu,
-  MessageCircle,
-  Paintbrush,
   Settings,
-  Video,
+  User,
 } from "lucide-react";
 
 import {
@@ -22,6 +12,7 @@ import {
 } from "@/app/components/ui/settings-dialog";
 import { GeneralSettings } from "./settingsections/generalsettings";
 import { useLanguage } from "@/hooks/uselanguage";
+import { AccountSettings } from "./settingsections/accountsettings";
 
 export function UserSettingsDialog({
   open,
@@ -34,17 +25,7 @@ export function UserSettingsDialog({
 
   const sections: SettingsSection[] = [
     { name: ttt("General"), icon: Settings, component: <GeneralSettings /> },
-    { name: ttt("Notifications"), icon: Bell },
-    { name: ttt("Navigation"), icon: Menu },
-    { name: ttt("Home"), icon: Home },
-    { name: ttt("Appearance"), icon: Paintbrush },
-    { name: ttt("Messages & media"), icon: MessageCircle },
-    { name: ttt("Language & region"), icon: Globe },
-    { name: ttt("Accessibility"), icon: Keyboard },
-    { name: ttt("Mark as read"), icon: Check },
-    { name: ttt("Audio & video"), icon: Video },
-    { name: ttt("Connected accounts"), icon: Link },
-    { name: ttt("Privacy & visibility"), icon: Lock },
+    { name: ttt("Account"), icon: User, component: <AccountSettings /> },
   ];
 
   return (

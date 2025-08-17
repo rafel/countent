@@ -13,8 +13,22 @@ export const users = pgTable("users", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const userSessions = pgTable("usersessions", {
+  sessionid: uuid("sessionid").primaryKey().defaultRandom(),
+  userid: uuid("userid").notNull().references(() => users.userid, { onDelete: "cascade" }),
+  session_token: text("session_token").notNull().unique(),
+  device_info: text("device_info"),
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  last_active: timestamp("last_active").defaultNow().notNull(),
+  expires_at: timestamp("expires_at").notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type UserSession = typeof userSessions.$inferSelect;
+export type NewUserSession = typeof userSessions.$inferInsert;
 export type UserPreferences = {
   theme?: string;
   language?: string;

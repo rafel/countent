@@ -2,9 +2,14 @@ import NextAuth, { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { dbclient } from "@/db/db";
 import { cache } from "react";
-import { NewUser, User, users, companies, companyUsers } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { NewUser, User, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import GoogleProvider from "next-auth/providers/google";
+import {
+  createUserSession,
+  updateSessionActivity,
+  generateSessionToken,
+} from "@/utils/auth";
 
 declare module "next-auth" {
   interface Session {
@@ -15,6 +20,12 @@ declare module "next-auth" {
       image?: string | null;
       permissions?: string[] | null;
     };
+    sessionToken?: string;
+  }
+
+  interface JWT {
+    sessionToken?: string;
+    userid?: string;
   }
 }
 
@@ -93,7 +104,7 @@ const authOptions: NextAuthConfig = {
     },
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
       if (!user.email) return false;
 
       let dbUser: User[] = await dbclient
@@ -123,6 +134,51 @@ const authOptions: NextAuthConfig = {
       }
 
       return true;
+    },
+
+    async jwt({ token, user, account }) {
+      // If this is a new sign-in, create a session
+      if (account && user?.email) {
+        const dbUser = await dbclient
+          .select()
+          .from(users)
+          .where(eq(users.email, user.email))
+          .limit(1);
+
+        if (dbUser.length > 0) {
+          token.userid = dbUser[0].userid;
+
+          // Generate and store session token
+          const sessionToken = generateSessionToken();
+          token.sessionToken = sessionToken;
+
+          // Create session in database
+          await createUserSession(
+            dbUser[0].userid,
+            sessionToken,
+            "Web Browser", // Device info - could be enhanced with actual device detection
+            undefined, // IP address - would need request context
+            undefined // User agent - would need request context
+          );
+        }
+      }
+
+      // Update session activity if session exists
+      if (typeof token.sessionToken === "string") {
+        await updateSessionActivity(token.sessionToken);
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (typeof token.userid === "string") {
+        session.user.id = token.userid;
+      }
+      if (typeof token.sessionToken === "string") {
+        session.sessionToken = token.sessionToken;
+      }
+      return session;
     },
   },
 };

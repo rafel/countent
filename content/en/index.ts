@@ -245,6 +245,10 @@ export const enTranslations = {
   'Users who have been invited but haven\'t accepted yet': 'Users who have been invited but haven\'t accepted yet',
   'Please type \'delete\' to confirm': 'Please type \'delete\' to confirm',
   'Type \'delete\' here': 'Type \'delete\' here',
-  'Information about your company\'s annual reporting status': 'Information about your company\'s annual reporting status'} as const;
+  'Information about your company\'s annual reporting status': 'Information about your company\'s annual reporting status',
+  'Leave': 'Leave',
+  'Company': 'Company',
+  'As the company owner, you cannot leave the company directly.': 'As the company owner, you cannot leave the company directly.',
+  'To leave this company, you need to transfer ownership to another team member first.': 'To leave this company, you need to transfer ownership to another team member first.'} as const;
 
 export default enTranslations;

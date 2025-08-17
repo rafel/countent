@@ -246,6 +246,10 @@ export const svTranslations: Record<keyof typeof enTranslations, string> = {
   'Users who have been invited but haven\'t accepted yet': 'Användare som har blivit inbjudna men inte accepterat',
   'Please type \'delete\' to confirm': 'Vänligen skriv \'ta bort\' för att bekräfta',
   'Type \'delete\' here': 'Skriv \'ta bort\' här',
-  'Information about your company\'s annual reporting status': 'Information om ditt företags årsredovisningsstatus'} as const;
+  'Information about your company\'s annual reporting status': 'Information om ditt företags årsredovisningsstatus',
+  'Leave': 'Lämna',
+  'Company': 'Företag',
+  'As the company owner, you cannot leave the company directly.': 'Som företagsägare kan du inte lämna företaget direkt.',
+  'To leave this company, you need to transfer ownership to another team member first.': 'För att lämna detta företag måste du först överföra ägarskap till en annan teammedlem.'} as const;
 
 export default svTranslations;
