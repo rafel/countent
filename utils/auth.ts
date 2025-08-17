@@ -100,11 +100,11 @@ export async function createUserSession(
 
     const sessionData: NewUserSession = {
       userid,
-      session_token: sessionToken,
-      device_info: deviceInfo || null,
-      ip_address: ipAddress || null,
-      user_agent: userAgent || null,
-      expires_at: expiresAt,
+      sessiontoken: sessionToken,
+      deviceinfo: deviceInfo || null,
+      ipaddress: ipAddress || null,
+      useragent: userAgent || null,
+      expiresat: expiresAt,
     };
 
     const newSessions = await dbclient
@@ -128,8 +128,8 @@ export async function getActiveSession(
       .from(userSessions)
       .where(
         and(
-          eq(userSessions.session_token, sessionToken),
-          gt(userSessions.expires_at, new Date())
+          eq(userSessions.sessiontoken, sessionToken),
+          gt(userSessions.expiresat, new Date())
         )
       )
       .limit(1);
@@ -145,10 +145,22 @@ export async function updateSessionActivity(
   sessionToken: string
 ): Promise<boolean> {
   try {
+    // First check if the session exists
+    const existingSession = await dbclient
+      .select()
+      .from(userSessions)
+      .where(eq(userSessions.sessiontoken, sessionToken))
+      .limit(1);
+
+    if (existingSession.length === 0) {
+      console.warn("Session not found for activity update:", sessionToken.substring(0, 8) + "...");
+      return false;
+    }
+
     await dbclient
       .update(userSessions)
-      .set({ last_active: new Date() })
-      .where(eq(userSessions.session_token, sessionToken));
+      .set({ lastactive: new Date() })
+      .where(eq(userSessions.sessiontoken, sessionToken));
 
     return true;
   } catch (error) {
@@ -163,7 +175,7 @@ export async function invalidateSession(
   try {
     await dbclient
       .delete(userSessions)
-      .where(eq(userSessions.session_token, sessionToken));
+      .where(eq(userSessions.sessiontoken, sessionToken));
 
     return true;
   } catch (error) {
@@ -195,10 +207,10 @@ export async function getUserActiveSessions(
       .where(
         and(
           eq(userSessions.userid, userid),
-          gt(userSessions.expires_at, new Date())
+          gt(userSessions.expiresat, new Date())
         )
       )
-      .orderBy(userSessions.last_active);
+      .orderBy(userSessions.lastactive);
 
     return sessions;
   } catch (error) {
@@ -211,7 +223,7 @@ export async function cleanupExpiredSessions(): Promise<number> {
   try {
     const result = await dbclient
       .delete(userSessions)
-      .where(lt(userSessions.expires_at, new Date()));
+      .where(lt(userSessions.expiresat, new Date()));
 
     // Drizzle doesn't always return rowCount, so we'll return a success indicator
     return result ? 1 : 0;
@@ -223,4 +235,19 @@ export async function cleanupExpiredSessions(): Promise<number> {
 
 export function generateSessionToken(): string {
   return randomBytes(32).toString("hex");
+}
+
+/**
+ * Validates if a session token is active and not expired
+ * @param sessionToken - The session token to validate
+ * @returns true if session is valid and active, false otherwise
+ */
+export async function validateSessionToken(sessionToken: string): Promise<boolean> {
+  try {
+    const session = await getActiveSession(sessionToken);
+    return !!session;
+  } catch (error) {
+    console.error("Error validating session token:", error);
+    return false;
+  }
 }

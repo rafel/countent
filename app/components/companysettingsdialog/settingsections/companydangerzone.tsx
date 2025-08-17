@@ -69,7 +69,7 @@ export function CompanyDangerZone({ company }: { company: Company }) {
       } else {
         setError(ttt("Failed to delete company"));
       }
-    } catch (error) {
+    } catch {
       setError(ttt("Failed to delete company"));
     } finally {
       setIsDeleting(false);
@@ -96,7 +96,7 @@ export function CompanyDangerZone({ company }: { company: Company }) {
       } else {
         setLeaveError(ttt("Something went wrong, please contact support"));
       }
-    } catch (error) {
+    } catch {
       setLeaveError(ttt("Something went wrong, please contact support"));
     } finally {
       setIsLeaving(false);
@@ -142,7 +142,7 @@ export function CompanyDangerZone({ company }: { company: Company }) {
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground mb-4">
-                    {ttt("Remove")} yourself from{" "}
+                    {ttt("Remove yourself from")}
                     <strong>{company.name}</strong>.{" "}
                     {ttt("This action cannot be undone.")}.
                   </p>

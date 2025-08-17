@@ -250,6 +250,17 @@ export const svTranslations: Record<keyof typeof enTranslations, string> = {
   'Leave': 'Lämna',
   'Company': 'Företag',
   'As the company owner, you cannot leave the company directly.': 'Som företagsägare kan du inte lämna företaget direkt.',
-  'To leave this company, you need to transfer ownership to another team member first.': 'För att lämna detta företag måste du först överföra ägarskap till en annan teammedlem.'} as const;
+  'To leave this company, you need to transfer ownership to another team member first.': 'För att lämna detta företag måste du först överföra ägarskap till en annan teammedlem.',
+  'You must decide what to do with all companies you own.': 'Du måste bestämma vad du ska göra med alla företag du äger.',
+  'Manage your account settings and logout options': 'Hantera dina kontoinställningar och utloggningsalternativ',
+  'Session Management': 'Sessionshantering',
+  'Sign out from your account': 'Logga ut från ditt konto',
+  'Loading...': 'Laddar...',
+  'Permanently delete your account and all associated data.': 'Permanenta borttagning av ditt konto och alla associerade data.',
+  'You are about to permanently delete your account.': 'Du är på väg att permanent ta bort ditt konto.',
+  'You own': 'Du äger',
+  'Unchecked companies will require you to transfer ownership first.': 'Omarkerade företag kommer att kräva att du först överför ägarskap.',
+  'Remove yourself from': 'Ta bort dig från',
+  'Log out from all devices': 'Logga ut från alla enheter'} as const;
 
 export default svTranslations;

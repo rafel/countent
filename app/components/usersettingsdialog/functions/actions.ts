@@ -7,7 +7,6 @@ import {
   companyUsers,
   companyInvites,
   companyUserDuties,
-  User,
 } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getUser, auth } from "@/utils/user";

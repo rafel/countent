@@ -1,19 +1,10 @@
 "use client";
 
 import * as React from "react";
-import {
-  BookOpen,
-  Bot,
-  Frame,
-  Map,
-  MessageCircle,
-  PieChart,
-  Settings,
-  SquareTerminal,
-} from "lucide-react";
+import { BookOpen, Bot, Settings, SquareTerminal } from "lucide-react";
 
 import { NavMain } from "@/app/components/sidebar/nav-main";
-import { NavProjects } from "@/app/components/sidebar/nav-projects";
+
 import { NavUser } from "@/app/components/sidebar/nav-user";
 import { CompanySwitcher } from "@/app/components/sidebar/company-switcher";
 import {
@@ -43,7 +34,9 @@ export function AppSidebar({
   const [openSettings, setOpenSettings] = React.useState(false);
 
   // Find the current company
-  const currentCompany = companies.find(c => c.companyid === currentCompanyId);
+  const currentCompany = companies.find(
+    (c) => c.companyid === currentCompanyId
+  );
 
   const data = {
     navMain: [
@@ -110,10 +103,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         {currentCompany && (
-          <NavMain 
-            items={data.navMain} 
-            currentCompany={currentCompany}
-          />
+          <NavMain items={data.navMain} currentCompany={currentCompany} />
         )}
         <NavChats />
       </SidebarContent>

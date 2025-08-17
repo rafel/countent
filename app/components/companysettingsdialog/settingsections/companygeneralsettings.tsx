@@ -46,7 +46,7 @@ export function CompanyGeneralSettings({ company }: { company: Company }) {
       } else {
         setError(ttt("Failed to save company data"));
       }
-    } catch (error) {
+    } catch {
       setError(ttt("Failed to save company data"));
     }
   }

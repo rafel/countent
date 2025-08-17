@@ -11,14 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/app/components/ui/table";
+
 import { Badge } from "@/app/components/ui/badge";
 import {
   DropdownMenu,

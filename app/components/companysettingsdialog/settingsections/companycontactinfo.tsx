@@ -42,7 +42,7 @@ export function CompanyContactInfo({ company }: { company: Company }) {
       } else {
         setError(ttt("Something went wrong, please contact support"));
       }
-    } catch (error) {
+    } catch {
       setError(ttt("Something went wrong, please contact support"));
     }
   }

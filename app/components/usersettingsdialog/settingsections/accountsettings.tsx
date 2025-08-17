@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/hooks/uselanguage";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -33,32 +32,24 @@ interface OwnedCompany {
 }
 
 export function AccountSettings() {
-  const { data: session } = useSession();
   const { ttt } = useLanguage();
-  
+
   // State for logout operations
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
-  
+
   // State for delete account
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmDeleteText, setConfirmDeleteText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  
+
   // State for owned companies
   const [ownedCompanies, setOwnedCompanies] = useState<OwnedCompany[]>([]);
   const [companiesToDelete, setCompaniesToDelete] = useState<string[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
 
-  // Fetch owned companies when delete dialog opens
-  useEffect(() => {
-    if (isDeleteDialogOpen) {
-      fetchOwnedCompanies();
-    }
-  }, [isDeleteDialogOpen]);
-
-  const fetchOwnedCompanies = async () => {
+  const fetchOwnedCompanies = useCallback(async () => {
     setIsLoadingCompanies(true);
     try {
       const result = await getCurrentUserCompanies();
@@ -67,12 +58,19 @@ export function AccountSettings() {
       } else {
         setOwnedCompanies(result.ownedCompanies);
       }
-    } catch (error) {
+    } catch {
       setDeleteError(ttt("Something went wrong, please contact support"));
     } finally {
       setIsLoadingCompanies(false);
     }
-  };
+  }, [ttt]);
+
+  // Fetch owned companies when delete dialog opens
+  useEffect(() => {
+    if (isDeleteDialogOpen) {
+      fetchOwnedCompanies();
+    }
+  }, [isDeleteDialogOpen, fetchOwnedCompanies]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -106,11 +104,13 @@ export function AccountSettings() {
 
     // Check if user has unhandled companies
     const unhandledCompanies = ownedCompanies.filter(
-      company => !companiesToDelete.includes(company.companyid)
+      (company) => !companiesToDelete.includes(company.companyid)
     );
 
     if (unhandledCompanies.length > 0) {
-      setDeleteError("You must decide what to do with all companies you own.");
+      setDeleteError(
+        ttt("You must decide what to do with all companies you own.")
+      );
       return;
     }
 
@@ -123,9 +123,10 @@ export function AccountSettings() {
         // Account deleted, user will be redirected
         window.location.href = "/";
       } else {
-        setDeleteError(result.error || ttt("Something went wrong, please contact support"));
+        setDeleteError(ttt("Something went wrong, please contact support")
+        );
       }
-    } catch (error) {
+    } catch {
       setDeleteError(ttt("Something went wrong, please contact support"));
     } finally {
       setIsDeleting(false);
@@ -134,14 +135,17 @@ export function AccountSettings() {
 
   const handleCompanyDeleteToggle = (companyId: string, checked: boolean) => {
     if (checked) {
-      setCompaniesToDelete(prev => [...prev, companyId]);
+      setCompaniesToDelete((prev) => [...prev, companyId]);
     } else {
-      setCompaniesToDelete(prev => prev.filter(id => id !== companyId));
+      setCompaniesToDelete((prev) => prev.filter((id) => id !== companyId));
     }
   };
 
-  const canDelete = confirmDeleteText.toLowerCase() === "delete" && 
-    ownedCompanies.every(company => companiesToDelete.includes(company.companyid));
+  const canDelete =
+    confirmDeleteText.toLowerCase() === ttt("delete") &&
+    ownedCompanies.every((company) =>
+      companiesToDelete.includes(company.companyid)
+    );
 
   return (
     <div className="space-y-6 pt-4">
@@ -150,7 +154,7 @@ export function AccountSettings() {
           {ttt("Account")} {ttt("Settings")}
         </h3>
         <p className="text-sm text-muted-foreground">
-          Manage your account settings and logout options
+          {ttt("Manage your account settings and logout options")}
         </p>
       </div>
 
@@ -158,9 +162,11 @@ export function AccountSettings() {
       <div className="space-y-4">
         <div className="flex items-center justify-between py-4 border-b border-border/50">
           <div className="space-y-1">
-            <h4 className="text-sm font-medium">Session Management</h4>
+            <h4 className="text-sm font-medium">
+              {ttt("Session Management")}
+            </h4>
             <p className="text-xs text-muted-foreground">
-              Sign out from your account
+              {ttt("Sign out from your account")}
             </p>
           </div>
           <div className="flex gap-2">
@@ -171,7 +177,7 @@ export function AccountSettings() {
               disabled={isLoggingOut}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              {isLoggingOut ? ttt("Loading team data...") : ttt("Log out")}
+              {isLoggingOut ? ttt("Loading...") : ttt("Log out")}
             </Button>
             <Button
               variant="outline"
@@ -180,7 +186,9 @@ export function AccountSettings() {
               disabled={isLoggingOutAll}
             >
               <Monitor className="h-4 w-4 mr-2" />
-              {isLoggingOutAll ? ttt("Loading team data...") : `${ttt("Log out")} from all devices`}
+              {isLoggingOutAll
+                ? ttt("Loading...")
+                : ttt("Log out from all devices")}
             </Button>
           </div>
         </div>
@@ -197,11 +205,14 @@ export function AccountSettings() {
               {ttt("Delete")} {ttt("Account")}
             </h4>
             <p className="text-sm text-muted-foreground mb-4">
-              Permanently delete your account and all associated data.{" "}
+              {ttt("Permanently delete your account and all associated data.")}{" "}
               {ttt("This action cannot be undone.")}.
             </p>
 
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" className="w-full sm:w-auto">
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -217,21 +228,22 @@ export function AccountSettings() {
                   <AlertDialogDescription asChild>
                     <div className="space-y-4">
                       <p>
-                        You are about to permanently delete your account.{" "}
+                        {ttt("You are about to permanently delete your account.")}{" "}
                         <strong>{ttt("cannot be undone")}</strong>.
                       </p>
 
                       {isLoadingCompanies ? (
                         <div className="text-center py-4">
                           <p className="text-sm text-muted-foreground">
-                            {ttt("Loading team data...")}
+                            {ttt("Loading...")}
                           </p>
                         </div>
                       ) : ownedCompanies.length > 0 ? (
                         <div className="space-y-3">
                           <div className="bg-amber-50 border border-amber-200 rounded p-3">
                             <h5 className="font-medium text-sm mb-2 text-amber-800">
-                              You own {ownedCompanies.length} compan{ownedCompanies.length === 1 ? 'y' : 'ies'}:
+                              {ttt("You own")} {ownedCompanies.length}
+                              {ownedCompanies.length === 1 ? "y" : "ies"}:
                             </h5>
                             <div className="space-y-2">
                               {ownedCompanies.map((company) => (
@@ -240,19 +252,27 @@ export function AccountSettings() {
                                   className="flex items-center space-x-2 text-sm"
                                 >
                                   <Checkbox
-                                    checked={companiesToDelete.includes(company.companyid)}
+                                    checked={companiesToDelete.includes(
+                                      company.companyid
+                                    )}
                                     onCheckedChange={(checked) =>
-                                      handleCompanyDeleteToggle(company.companyid, checked as boolean)
+                                      handleCompanyDeleteToggle(
+                                        company.companyid,
+                                        checked as boolean
+                                      )
                                     }
                                   />
                                   <span className="text-amber-700">
-                                    {ttt("Delete")} <strong>{company.name || ttt("Unnamed Company")}</strong>
+                                    {ttt("Delete")}{" "}
+                                    <strong>
+                                      {company.name || ttt("Unnamed Company")}
+                                    </strong>
                                   </span>
                                 </label>
                               ))}
                             </div>
                             <p className="text-xs text-amber-600 mt-2">
-                              Unchecked companies will require you to transfer ownership first.
+                              {ttt("Unchecked companies will require you to transfer ownership first.")}
                             </p>
                           </div>
                         </div>
@@ -265,8 +285,12 @@ export function AccountSettings() {
                       )}
 
                       <div className="space-y-2">
-                        <Label htmlFor="confirm-delete" className="text-sm font-medium">
-                          {ttt("Type")} <strong>{ttt("delete")}</strong> {ttt("to confirm:")}
+                        <Label
+                          htmlFor="confirm-delete"
+                          className="text-sm font-medium"
+                        >
+                          {ttt("Type")} <strong>{ttt("delete")}</strong>{" "}
+                          {ttt("to confirm:")}
                         </Label>
                         <Input
                           id="confirm-delete"
@@ -297,7 +321,9 @@ export function AccountSettings() {
                     disabled={!canDelete || isDeleting}
                     className="bg-destructive hover:bg-destructive/90"
                   >
-                    {isDeleting ? ttt("Deleting...") : `${ttt("Delete")} ${ttt("Account")}`}
+                    {isDeleting
+                      ? ttt("Deleting...")
+                      : `${ttt("Delete")} ${ttt("Account")}`}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -46,7 +46,7 @@ export function CompanyAccountingSettings({ company }: { company: Company }) {
       } else {
         setError(ttt("Failed to update company"));
       }
-    } catch (error) {
+    } catch {
       setError(ttt("Failed to update company"));
     }
   }

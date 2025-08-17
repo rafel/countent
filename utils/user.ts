@@ -9,6 +9,7 @@ import {
   createUserSession,
   updateSessionActivity,
   generateSessionToken,
+  getActiveSession,
 } from "@/utils/auth";
 
 declare module "next-auth" {
@@ -165,7 +166,10 @@ const authOptions: NextAuthConfig = {
 
       // Update session activity if session exists
       if (typeof token.sessionToken === "string") {
-        await updateSessionActivity(token.sessionToken);
+        const updated = await updateSessionActivity(token.sessionToken);
+        if (!updated) {
+          console.warn("Failed to update session activity, session may not exist in database");
+        }
       }
 
       return token;
@@ -185,10 +189,39 @@ const authOptions: NextAuthConfig = {
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
 
+/**
+ * Validates if a user has an active session
+ * @param sessionToken - The session token to validate
+ * @returns true if session is active, false otherwise
+ */
+export async function isUserSessionActive(sessionToken: string): Promise<boolean> {
+  try {
+    const activeSession = await getActiveSession(sessionToken);
+    return !!activeSession;
+  } catch (error) {
+    console.error("Error checking session activity:", error);
+    return false;
+  }
+}
+
+/**
+ * Gets the authenticated user if they have a valid session
+ * Returns null if user is not authenticated or session is invalid/expired
+ */
 export const getUser = cache(async (): Promise<User | null> => {
   const session = await auth();
 
   if (!session?.user?.email) return null;
+
+  // Check if session has a session token and if it's valid in the database
+  if (session.sessionToken) {
+    const activeSession = await getActiveSession(session.sessionToken);
+    if (!activeSession) {
+      // Session token exists in JWT but not in database or expired
+      console.warn("Invalid or expired session token");
+      return null;
+    }
+  }
 
   const dbUser: User[] = await dbclient
     .select()
@@ -203,3 +236,36 @@ export const getUser = cache(async (): Promise<User | null> => {
 
   return dbUser[0];
 });
+
+/**
+ * Gets the authenticated user along with session information
+ * Returns null if user is not authenticated or session is invalid/expired
+ */
+export async function getUserWithSession(): Promise<{ user: User; sessionToken: string } | null> {
+  const session = await auth();
+
+  if (!session?.user?.email || !session.sessionToken) return null;
+
+  // Validate session token
+  const activeSession = await getActiveSession(session.sessionToken);
+  if (!activeSession) {
+    console.warn("Invalid or expired session token");
+    return null;
+  }
+
+  const dbUser: User[] = await dbclient
+    .select()
+    .from(users)
+    .where(eq(users.email, session.user.email))
+    .limit(1);
+
+  if (!dbUser || dbUser.length === 0) {
+    console.error("Sign in User Not Found");
+    return null;
+  }
+
+  return {
+    user: dbUser[0],
+    sessionToken: session.sessionToken,
+  };
+}

@@ -9,20 +9,22 @@ export const users = pgTable("users", {
   theme: text("theme").default("system"),
   language: text("language").default("en"),
   permissions: text("permissions").array(),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
+  createdat: timestamp("createdat").defaultNow().notNull(),
+  updatedat: timestamp("updatedat").defaultNow().notNull(),
 });
 
 export const userSessions = pgTable("usersessions", {
   sessionid: uuid("sessionid").primaryKey().defaultRandom(),
-  userid: uuid("userid").notNull().references(() => users.userid, { onDelete: "cascade" }),
-  session_token: text("session_token").notNull().unique(),
-  device_info: text("device_info"),
-  ip_address: text("ip_address"),
-  user_agent: text("user_agent"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  last_active: timestamp("last_active").defaultNow().notNull(),
-  expires_at: timestamp("expires_at").notNull(),
+  userid: uuid("userid")
+    .notNull()
+    .references(() => users.userid, { onDelete: "cascade" }),
+  sessiontoken: text("sessiontoken").notNull().unique(),
+  deviceinfo: text("deviceinfo"),
+  ipaddress: text("ipaddress"),
+  useragent: text("useragent"),
+  createdat: timestamp("createdat").defaultNow().notNull(),
+  lastactive: timestamp("lastactive").defaultNow().notNull(),
+  expiresat: timestamp("expiresat").notNull(),
 });
 
 export type User = typeof users.$inferSelect;

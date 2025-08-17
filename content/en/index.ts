@@ -249,6 +249,17 @@ export const enTranslations = {
   'Leave': 'Leave',
   'Company': 'Company',
   'As the company owner, you cannot leave the company directly.': 'As the company owner, you cannot leave the company directly.',
-  'To leave this company, you need to transfer ownership to another team member first.': 'To leave this company, you need to transfer ownership to another team member first.'} as const;
+  'To leave this company, you need to transfer ownership to another team member first.': 'To leave this company, you need to transfer ownership to another team member first.',
+  'You must decide what to do with all companies you own.': 'You must decide what to do with all companies you own.',
+  'Manage your account settings and logout options': 'Manage your account settings and logout options',
+  'Session Management': 'Session Management',
+  'Sign out from your account': 'Sign out from your account',
+  'Loading...': 'Loading...',
+  'Permanently delete your account and all associated data.': 'Permanently delete your account and all associated data.',
+  'You are about to permanently delete your account.': 'You are about to permanently delete your account.',
+  'You own': 'You own',
+  'Unchecked companies will require you to transfer ownership first.': 'Unchecked companies will require you to transfer ownership first.',
+  'Remove yourself from': 'Remove yourself from',
+  'Log out from all devices': 'Log out from all devices'} as const;
 
 export default enTranslations;
