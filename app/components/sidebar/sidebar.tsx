@@ -18,17 +18,20 @@ import { User } from "@/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
 import { useLanguage } from "@/hooks/uselanguage";
 import { Company } from "@/db/tables/company";
+import { Chat } from "@/db/tables/chat";
 import { NavChats } from "./nav-chats";
 
 export function AppSidebar({
   user,
   currentCompanyId,
   companies = [],
+  chats = [],
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: User;
   currentCompanyId?: string;
   companies?: Company[];
+  chats?: Chat[];
 }) {
   const { ttt } = useLanguage();
   const [openSettings, setOpenSettings] = React.useState(false);
@@ -105,7 +108,10 @@ export function AppSidebar({
         {currentCompany && (
           <NavMain items={data.navMain} currentCompany={currentCompany} />
         )}
-        <NavChats />
+        <NavChats 
+          chats={chats}
+          currentCompanyId={currentCompanyId}
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} onOpenSettings={setOpenSettings} />

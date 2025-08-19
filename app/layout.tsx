@@ -84,7 +84,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionProvider>
-          <DashboardProviders>{children}</DashboardProviders>
+          {children}
         </SessionProvider>
       </body>
     </html>

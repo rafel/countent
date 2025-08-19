@@ -1,0 +1,767 @@
+{
+  "id": "f296b1b7-4229-4d44-9b86-0205439c4065",
+  "prevId": "af2b35ce-15af-4c00-a5f1-650c579d19af",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.chatmessages": {
+      "name": "chatmessages",
+      "schema": "",
+      "columns": {
+        "messageid": {
+          "name": "messageid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chatid": {
+          "name": "chatid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userid": {
+          "name": "userid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chatmessages_chatid_chats_chatid_fk": {
+          "name": "chatmessages_chatid_chats_chatid_fk",
+          "tableFrom": "chatmessages",
+          "tableTo": "chats",
+          "columnsFrom": [
+            "chatid"
+          ],
+          "columnsTo": [
+            "chatid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "chatmessages_userid_users_userid_fk": {
+          "name": "chatmessages_userid_users_userid_fk",
+          "tableFrom": "chatmessages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userid"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.chatusers": {
+      "name": "chatusers",
+      "schema": "",
+      "columns": {
+        "chatuserid": {
+          "name": "chatuserid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "chatid": {
+          "name": "chatid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userid": {
+          "name": "userid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canwrite": {
+          "name": "canwrite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chatusers_chatid_chats_chatid_fk": {
+          "name": "chatusers_chatid_chats_chatid_fk",
+          "tableFrom": "chatusers",
+          "tableTo": "chats",
+          "columnsFrom": [
+            "chatid"
+          ],
+          "columnsTo": [
+            "chatid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "chatusers_userid_users_userid_fk": {
+          "name": "chatusers_userid_users_userid_fk",
+          "tableFrom": "chatusers",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userid"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.chats": {
+      "name": "chats",
+      "schema": "",
+      "columns": {
+        "chatid": {
+          "name": "chatid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "companyid": {
+          "name": "companyid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdby": {
+          "name": "createdby",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "isshared": {
+          "name": "isshared",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastmessageat": {
+          "name": "lastmessageat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chats_companyid_companies_companyid_fk": {
+          "name": "chats_companyid_companies_companyid_fk",
+          "tableFrom": "chats",
+          "tableTo": "companies",
+          "columnsFrom": [
+            "companyid"
+          ],
+          "columnsTo": [
+            "companyid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "chats_createdby_users_userid_fk": {
+          "name": "chats_createdby_users_userid_fk",
+          "tableFrom": "chats",
+          "tableTo": "users",
+          "columnsFrom": [
+            "createdby"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.companies": {
+      "name": "companies",
+      "schema": "",
+      "columns": {
+        "companyid": {
+          "name": "companyid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "bolagsverketid": {
+          "name": "bolagsverketid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orgnumber": {
+          "name": "orgnumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "serialnumber": {
+          "name": "serialnumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vatnumber": {
+          "name": "vatnumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contactperson": {
+          "name": "contactperson",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "addressline1": {
+          "name": "addressline1",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "addressline2": {
+          "name": "addressline2",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "postalcode": {
+          "name": "postalcode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fiscalyearstart": {
+          "name": "fiscalyearstart",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fiscalyearend": {
+          "name": "fiscalyearend",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vatreportingperiod": {
+          "name": "vatreportingperiod",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accountingmethod": {
+          "name": "accountingmethod",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hasfirstannualreport": {
+          "name": "hasfirstannualreport",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.companyinvites": {
+      "name": "companyinvites",
+      "schema": "",
+      "columns": {
+        "inviteid": {
+          "name": "inviteid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "companyid": {
+          "name": "companyid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invitedby": {
+          "name": "invitedby",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expiresat": {
+          "name": "expiresat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "companyinvites_companyid_companies_companyid_fk": {
+          "name": "companyinvites_companyid_companies_companyid_fk",
+          "tableFrom": "companyinvites",
+          "tableTo": "companies",
+          "columnsFrom": [
+            "companyid"
+          ],
+          "columnsTo": [
+            "companyid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "companyinvites_invitedby_users_userid_fk": {
+          "name": "companyinvites_invitedby_users_userid_fk",
+          "tableFrom": "companyinvites",
+          "tableTo": "users",
+          "columnsFrom": [
+            "invitedby"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.companyuserduties": {
+      "name": "companyuserduties",
+      "schema": "",
+      "columns": {
+        "companyuserdutyid": {
+          "name": "companyuserdutyid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "companyuserid": {
+          "name": "companyuserid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "companyuserduties_companyuserid_companyusers_companyuserid_fk": {
+          "name": "companyuserduties_companyuserid_companyusers_companyuserid_fk",
+          "tableFrom": "companyuserduties",
+          "tableTo": "companyusers",
+          "columnsFrom": [
+            "companyuserid"
+          ],
+          "columnsTo": [
+            "companyuserid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.companyusers": {
+      "name": "companyusers",
+      "schema": "",
+      "columns": {
+        "companyuserid": {
+          "name": "companyuserid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userid": {
+          "name": "userid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "companyid": {
+          "name": "companyid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'owner'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "companyusers_userid_users_userid_fk": {
+          "name": "companyusers_userid_users_userid_fk",
+          "tableFrom": "companyusers",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userid"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "companyusers_companyid_companies_companyid_fk": {
+          "name": "companyusers_companyid_companies_companyid_fk",
+          "tableFrom": "companyusers",
+          "tableTo": "companies",
+          "columnsFrom": [
+            "companyid"
+          ],
+          "columnsTo": [
+            "companyid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.usersessions": {
+      "name": "usersessions",
+      "schema": "",
+      "columns": {
+        "sessionid": {
+          "name": "sessionid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "userid": {
+          "name": "userid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sessiontoken": {
+          "name": "sessiontoken",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deviceinfo": {
+          "name": "deviceinfo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ipaddress": {
+          "name": "ipaddress",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "useragent": {
+          "name": "useragent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lastactive": {
+          "name": "lastactive",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expiresat": {
+          "name": "expiresat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "usersessions_userid_users_userid_fk": {
+          "name": "usersessions_userid_users_userid_fk",
+          "tableFrom": "usersessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userid"
+          ],
+          "columnsTo": [
+            "userid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "usersessions_sessiontoken_unique": {
+          "name": "usersessions_sessiontoken_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "sessiontoken"
+          ]
+        }
+      }
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "userid": {
+          "name": "userid",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "theme": {
+          "name": "theme",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'system'"
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'en'"
+        },
+        "permissions": {
+          "name": "permissions",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      }
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

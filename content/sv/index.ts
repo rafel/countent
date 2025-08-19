@@ -261,6 +261,7 @@ export const svTranslations: Record<keyof typeof enTranslations, string> = {
   'You own': 'Du äger',
   'Unchecked companies will require you to transfer ownership first.': 'Omarkerade företag kommer att kräva att du först överför ägarskap.',
   'Remove yourself from': 'Ta bort dig från',
-  'Log out from all devices': 'Logga ut från alla enheter'} as const;
+  'Log out from all devices': 'Logga ut från alla enheter',
+  'Type your message...': ''} as const;
 
 export default svTranslations;

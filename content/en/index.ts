@@ -260,6 +260,7 @@ export const enTranslations = {
   'You own': 'You own',
   'Unchecked companies will require you to transfer ownership first.': 'Unchecked companies will require you to transfer ownership first.',
   'Remove yourself from': 'Remove yourself from',
-  'Log out from all devices': 'Log out from all devices'} as const;
+  'Log out from all devices': 'Log out from all devices',
+  'Type your message...': 'Type your message...'} as const;
 
 export default enTranslations;
