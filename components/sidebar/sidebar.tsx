@@ -38,6 +38,10 @@ export function AppSidebar({
     (c) => c.companyid === currentCompanyId
   );
 
+  if (!currentCompanyId) {
+    return null;
+  }
+
   const data = {
     navMain: [
       {
@@ -105,7 +109,7 @@ export function AppSidebar({
         {currentCompany && (
           <NavMain items={data.navMain} currentCompany={currentCompany} />
         )}
-        <NavChats />
+        <NavChats currentCompanyId={currentCompanyId} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} onOpenSettings={setOpenSettings} />

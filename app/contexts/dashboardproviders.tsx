@@ -2,6 +2,7 @@ import { getUser } from "@/utils/user";
 import { ThemeProvider } from "./themeprovider";
 import { LanguageProvider } from "./languageprovider";
 import { Language } from "./languageprovider";
+import { DataStreamProvider } from '@/components/data-stream-provider';
 
 interface DashboardProvidersProps {
   children: React.ReactNode;
@@ -20,7 +21,9 @@ export async function DashboardProviders({
 
   return (
     <LanguageProvider initialLanguage={initialLanguage}>
-      <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>
+      <ThemeProvider initialTheme={initialTheme}>
+        <DataStreamProvider>{children}</DataStreamProvider>
+      </ThemeProvider>
     </LanguageProvider>
   );
 }

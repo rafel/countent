@@ -19,12 +19,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { LogOut, Trash2, AlertTriangle, Monitor } from "lucide-react";
+import { getCurrentUserCompanies } from "@/app/d/[companyid]/actions";
+
 import {
   logoutUser,
   logoutAllDevices,
   deleteUserAccount,
-  getCurrentUserCompanies,
-} from "../functions/actions";
+} from "@/app/(landing)/(auth)/actions";
 
 interface OwnedCompany {
   companyid: string;
@@ -123,8 +124,7 @@ export function AccountSettings() {
         // Account deleted, user will be redirected
         window.location.href = "/";
       } else {
-        setDeleteError(ttt("Something went wrong, please contact support")
-        );
+        setDeleteError(ttt("Something went wrong, please contact support"));
       }
     } catch {
       setDeleteError(ttt("Something went wrong, please contact support"));
@@ -162,9 +162,7 @@ export function AccountSettings() {
       <div className="space-y-4">
         <div className="flex items-center justify-between py-4 border-b border-border/50">
           <div className="space-y-1">
-            <h4 className="text-sm font-medium">
-              {ttt("Session Management")}
-            </h4>
+            <h4 className="text-sm font-medium">{ttt("Session Management")}</h4>
             <p className="text-xs text-muted-foreground">
               {ttt("Sign out from your account")}
             </p>
@@ -228,7 +226,9 @@ export function AccountSettings() {
                   <AlertDialogDescription asChild>
                     <div className="space-y-4">
                       <p>
-                        {ttt("You are about to permanently delete your account.")}{" "}
+                        {ttt(
+                          "You are about to permanently delete your account."
+                        )}{" "}
                         <strong>{ttt("cannot be undone")}</strong>.
                       </p>
 
@@ -272,7 +272,9 @@ export function AccountSettings() {
                               ))}
                             </div>
                             <p className="text-xs text-amber-600 mt-2">
-                              {ttt("Unchecked companies will require you to transfer ownership first.")}
+                              {ttt(
+                                "Unchecked companies will require you to transfer ownership first."
+                              )}
                             </p>
                           </div>
                         </div>

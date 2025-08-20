@@ -30,9 +30,7 @@ import {
 import { generateHashedPassword } from "../../utils";
 import { ChatSDKError } from "../../errors";
 import { db } from "@/lib/db";
-
-//import type { ArtifactKind } from "@/components/artifact";
-type ArtifactKind = "text" | "code" | "image" | "sheet";
+import { ArtifactKind } from "@/lib/types";
 
 export async function getUser(email: string): Promise<Array<User>> {
   try {
@@ -177,8 +175,18 @@ export async function getChatsByUserId({
 export async function getChatById({ id }: { id: string }) {
   try {
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
+    
+    if (!selectedChat) {
+      throw new ChatSDKError("not_found:database", `Chat with id ${id} not found`);
+    }
+    
     return selectedChat;
-  } catch {
+  } catch (error) {
+    if (error instanceof ChatSDKError) {
+      throw error;
+    }
+    
+    console.error('Database error in getChatById:', error);
     throw new ChatSDKError("bad_request:database", "Failed to get chat by id");
   }
 }
@@ -432,7 +440,7 @@ export async function updateChatVisiblityById({
   visibility,
 }: {
   chatId: string;
-  visibility: "private" | "public";
+  visibility: VisibilityType;
 }) {
   try {
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
@@ -440,6 +448,28 @@ export async function updateChatVisiblityById({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to update chat visibility by id"
+    );
+  }
+}
+
+export async function updateChatTitleById({
+  chatId,
+  title,
+}: {
+  chatId: string;
+  title: string;
+}) {
+  try {
+    const [updatedChat] = await db
+      .update(chat)
+      .set({ title })
+      .where(eq(chat.id, chatId))
+      .returning();
+    return updatedChat;
+  } catch {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update chat title by id"
     );
   }
 }

@@ -2,10 +2,9 @@ import { getUser } from "@/utils/user";
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/sidebar/sidebar";
-import { Header } from "@/components/sidebar/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardProviders } from "@/app/contexts/dashboardproviders";
-import { getUserCompanies } from "./functions/actions";
+import { getUserCompanies } from "./actions";
 
 export default async function HomeLayout({
   children,
@@ -40,8 +39,7 @@ export default async function HomeLayout({
           companies={companies}
         />
         <SidebarInset>
-          <Header />
-          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+          {children}
         </SidebarInset>
       </SidebarProvider>
     </DashboardProviders>

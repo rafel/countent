@@ -11,8 +11,8 @@ const LANGUAGE_FILES = {
 // Function to extract translation keys from files
 async function extractTranslationKeys() {
   // Use the glob promise API
-  const files = await globModule.glob("app/**/*.{ts,tsx}", {
-    ignore: ["app/content/**/*"],
+  const files = await globModule.glob("{app,components}/**/*.{ts,tsx}", {
+    ignore: ["app/content/**/*", "content/**/*"],
   });
 
   // Enhanced regex to capture ttt() calls with double quotes, handling escaped quotes, apostrophes, and multi-line
@@ -140,11 +140,77 @@ function updateTranslationFiles(keys: string[]) {
   });
 }
 
+// Function to remove unused translation keys
+function removeUnusedTranslations(usedKeys: string[]) {
+  const usedKeysSet = new Set(usedKeys);
+  
+  Object.entries(LANGUAGE_FILES).forEach(([lang, filePath]) => {
+    const existingTranslations = parseTranslations(filePath);
+    const existingKeys = Object.keys(existingTranslations);
+    const unusedKeys = existingKeys.filter(key => !usedKeysSet.has(key));
+    
+    if (unusedKeys.length > 0) {
+      console.log(`Found ${unusedKeys.length} unused keys in ${lang} translations:`, unusedKeys);
+      
+      // Read the current file content
+      let fileContent = fs.readFileSync(filePath, "utf8");
+      
+      // Remove each unused key
+      unusedKeys.forEach(key => {
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Match the key-value pair with optional comma and whitespace
+        const keyRegex = new RegExp(`\\s*'${escapedKey}'\\s*:\\s*'[^'\\\\]*(?:\\\\.[^'\\\\]*)*'\\s*,?`, 'g');
+        fileContent = fileContent.replace(keyRegex, '');
+      });
+      
+      // Clean up any double commas or trailing commas before closing brace
+      fileContent = fileContent.replace(/,\s*,/g, ',');
+      fileContent = fileContent.replace(/,(\s*})/g, '$1');
+      
+      fs.writeFileSync(filePath, fileContent, "utf8");
+      console.log(`Removed ${unusedKeys.length} unused keys from ${lang} translations`);
+    } else {
+      console.log(`No unused keys found in ${lang} translations`);
+    }
+  });
+}
+
+// Function to show help
+function showHelp() {
+  console.log(`
+Translation Key Manager
+
+Usage: npm run translate [options]
+
+Options:
+  --remove-unused    Remove translation keys that are no longer used in the codebase
+  --help            Show this help message
+
+Examples:
+  npm run translate                    # Update translation files with new keys
+  npm run translate -- --remove-unused # Remove unused keys and update files
+`);
+}
+
 // Main function
 async function main() {
+  const args = process.argv.slice(2);
+  const removeUnused = args.includes('--remove-unused');
+  const showHelpFlag = args.includes('--help') || args.includes('-h');
+  
+  if (showHelpFlag) {
+    showHelp();
+    return;
+  }
+  
   console.log("Extracting translation keys from codebase...");
   const keys = await extractTranslationKeys();
   console.log(`Found ${keys.length} translation keys from code`);
+
+  if (removeUnused) {
+    console.log("Removing unused translation keys...");
+    removeUnusedTranslations(keys);
+  }
 
   console.log("Updating translation files...");
   updateTranslationFiles(keys);

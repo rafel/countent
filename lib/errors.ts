@@ -4,7 +4,8 @@ export type ErrorType =
   | "forbidden"
   | "not_found"
   | "rate_limit"
-  | "offline";
+  | "offline"
+  | "internal_server_error";
 
 export type Surface =
   | "chat"
@@ -15,7 +16,8 @@ export type Surface =
   | "history"
   | "vote"
   | "document"
-  | "suggestions";
+  | "suggestions"
+  | "internal_server_error";
 
 export type ErrorCode = `${ErrorType}:${Surface}`;
 
@@ -31,6 +33,7 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   vote: "response",
   document: "response",
   suggestions: "response",
+  internal_server_error: "response",
 };
 
 export class ChatSDKError extends Error {

@@ -13,38 +13,6 @@ import { getUser, auth } from "@/utils/user";
 import { signOut } from "@/utils/user";
 import { invalidateSession, invalidateAllUserSessions } from "@/utils/auth";
 
-export async function getCurrentUserCompanies(): Promise<{
-  ownedCompanies: Array<{ companyid: string; name: string | null }>;
-  error?: string;
-}> {
-  try {
-    const user = await getUser();
-    if (!user) {
-      return { ownedCompanies: [], error: "User not authenticated" };
-    }
-
-    // Get companies where user is owner
-    const ownedCompanies = await db
-      .select({
-        companyid: companies.companyid,
-        name: companies.name,
-      })
-      .from(companyUsers)
-      .innerJoin(companies, eq(companyUsers.companyid, companies.companyid))
-      .where(
-        and(
-          eq(companyUsers.userid, user.userid),
-          eq(companyUsers.role, "owner")
-        )
-      );
-
-    return { ownedCompanies };
-  } catch (error) {
-    console.error("Error fetching user companies:", error);
-    return { ownedCompanies: [], error: "Failed to fetch companies" };
-  }
-}
-
 export async function deleteUserAccount(
   companiesToDelete: string[]
 ): Promise<{ success: boolean; error?: string }> {
@@ -118,20 +86,14 @@ export async function deleteUserAccount(
         .where(eq(companyUsers.companyid, companyId));
 
       // 4. Delete the company
-      await db
-        .delete(companies)
-        .where(eq(companies.companyid, companyId));
+      await db.delete(companies).where(eq(companies.companyid, companyId));
     }
 
     // Remove user from all remaining companies
-    await db
-      .delete(companyUsers)
-      .where(eq(companyUsers.userid, user.userid));
+    await db.delete(companyUsers).where(eq(companyUsers.userid, user.userid));
 
     // Delete user's invitations
-    await db
-      .delete(companyInvites)
-      .where(eq(companyInvites.email, user.email));
+    await db.delete(companyInvites).where(eq(companyInvites.email, user.email));
 
     // Finally delete the user
     await db.delete(users).where(eq(users.userid, user.userid));
@@ -150,7 +112,7 @@ export async function logoutUser(): Promise<{ success: boolean }> {
     if (session?.sessionToken) {
       await invalidateSession(session.sessionToken);
     }
-    
+
     await signOut({ redirectTo: "/" });
     return { success: true };
   } catch (error) {
@@ -165,10 +127,10 @@ export async function logoutAllDevices(): Promise<{ success: boolean }> {
     if (!user) {
       return { success: false };
     }
-    
+
     // Invalidate ALL sessions for this user
     await invalidateAllUserSessions(user.userid);
-    
+
     // Also sign out the current session
     await signOut({ redirectTo: "/" });
     return { success: true };

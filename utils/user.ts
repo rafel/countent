@@ -2,7 +2,7 @@ import NextAuth, { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 import { cache } from "react";
-import { NewUser, User, users } from "@/lib/db/schema";
+import { NewUser, User, UserType, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import GoogleProvider from "next-auth/providers/google";
 import {
@@ -20,6 +20,7 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       permissions?: string[] | null;
+      type?: UserType;
     };
     sessionToken?: string;
   }
@@ -27,6 +28,7 @@ declare module "next-auth" {
   interface JWT {
     sessionToken?: string;
     userid?: string;
+    type?: UserType;
   }
 }
 
@@ -148,7 +150,7 @@ const authOptions: NextAuthConfig = {
 
         if (dbUser.length > 0) {
           token.userid = dbUser[0].userid;
-
+          token.type = dbUser[0].type;
           // Generate and store session token
           const sessionToken = generateSessionToken();
           token.sessionToken = sessionToken;
@@ -181,6 +183,9 @@ const authOptions: NextAuthConfig = {
       }
       if (typeof token.sessionToken === "string") {
         session.sessionToken = token.sessionToken;
+      }
+      if (typeof token.type === "string") {
+        session.user.type = token.type as UserType;
       }
       return session;
     },
