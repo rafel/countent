@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { dbclient } from "@/db/db";
-import { UserPreferences, users } from "@/db/schema";
+import { type NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { type UserPreferences, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/utils/user";
 import { LANGUAGES } from "@/app/contexts/languageprovider";
@@ -14,7 +14,7 @@ export async function GET() {
     }
 
     // Get user preferences
-    const user = await dbclient
+    const user = await db
       .select({
         theme: users.theme,
         language: users.language,
@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await dbclient
+    await db
       .update(users)
       .set(updateData)
       .where(eq(users.email, session.user.email));

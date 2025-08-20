@@ -11,7 +11,8 @@
     "migrate-dry": "drizzle-kit check",
     "migrate-push": "drizzle-kit push",
     "tsc": "npx tsc",
-    "translate": "npx tsx scripts/translate.ts"
+    "translate": "npx tsx scripts/translate.ts",
+    "test": "export PLAYWRIGHT=True && npx playwright test"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -46,6 +47,7 @@
     "@supabase/supabase-js": "^2.51.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/typed.js": "^2.0.9",
+    "bcrypt-ts": "^7.1.0",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -80,6 +82,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.55.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

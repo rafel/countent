@@ -1,21 +1,21 @@
 "use client";
 
-import { cn } from "@/utils/common";
-import { Button } from "@/app/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/app/components/ui/card";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Alert, AlertDescription } from "@/app/components/ui/alert";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { AlertCircleIcon } from "lucide-react";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { commonSettings } from "@/content/common";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -35,7 +35,7 @@ export function LoginForm({
     setIsLoading(true);
     setError(""); // Clear any previous errors
     try {
-      await signIn("google", { redirectTo: "/dashboard" });
+      await signIn("google", { redirectTo: "/d" });
     } catch (error) {
       console.error("Google login error:", error);
       setError(ttt("Failed to sign in with Google. Please try again."));
@@ -52,7 +52,7 @@ export function LoginForm({
       const result = await signIn("credentials", {
         email,
         password,
-        redirectTo: "/dashboard",
+        redirectTo: "/d",
         redirect: false,
       });
 
@@ -70,7 +70,7 @@ export function LoginForm({
         }
       } else if (result?.ok) {
         // Successful login
-        window.location.href = "/dashboard";
+        window.location.href = "/d";
       } else {
         setError(ttt("An unexpected error occurred. Please try again."));
       }

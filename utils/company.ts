@@ -1,6 +1,6 @@
 import { cache } from "react";
-import { dbclient } from "@/db/db";
-import { companies, companyUsers } from "@/db/schema";
+import { db } from "@/lib/db";
+import { companies, companyUsers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getUser } from "./user";
 
@@ -9,7 +9,7 @@ export const getUserCompanies = cache(async (userId: string) => {
   if (!user) {
     throw new Error("User not found");
   }
-  const userCompanies = await dbclient
+  const userCompanies = await db
     .select({
       companyid: companies.companyid,
       name: companies.name,

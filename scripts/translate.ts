@@ -1,27 +1,30 @@
-import fs from 'fs';
-import path from 'path';
-import * as globModule from 'glob';
+import fs from "node:fs";
+import path from "node:path";
+import * as globModule from "glob";
 
 // Define language files paths
 const LANGUAGE_FILES = {
-  en: path.resolve(__dirname, '../content/en/index.ts'),
-  sv: path.resolve(__dirname, '../content/sv/index.ts'),
+  en: path.resolve(__dirname, "../content/en/index.ts"),
+  sv: path.resolve(__dirname, "../content/sv/index.ts"),
 };
 
 // Function to extract translation keys from files
 async function extractTranslationKeys() {
   // Use the glob promise API
-  const files = await globModule.glob('app/**/*.{ts,tsx}', { ignore: ['app/content/**/*'] });
-  
-  // Enhanced regex to capture ttt() calls with double quotes, handling escaped quotes and apostrophes
-  const translationKeyRegex = /ttt\("([^"\\]*(?:\\.[^"\\]*)*)"\)/g;
-  
+  const files = await globModule.glob("app/**/*.{ts,tsx}", {
+    ignore: ["app/content/**/*"],
+  });
+
+  // Enhanced regex to capture ttt() calls with double quotes, handling escaped quotes, apostrophes, and multi-line
+  const translationKeyRegex =
+    /ttt\([\s\S]*?"([^"\\]*(?:\\.[^"\\]*)*)"[\s\S]*?\)/g;
+
   const keys = new Set<string>();
 
   files.forEach((file: string) => {
-    const content = fs.readFileSync(file, 'utf8');
+    const content = fs.readFileSync(file, "utf8");
     let match;
-    
+
     while ((match = translationKeyRegex.exec(content)) !== null) {
       const key = match[1].replace(/\\"/g, '"'); // Unescape double quotes
       if (key) {
@@ -36,19 +39,20 @@ async function extractTranslationKeys() {
 // Function to parse existing translations directly from the file
 function parseTranslations(filePath: string): Record<string, string> {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const result: Record<string, string> = {};
-    
+
     // Updated regex to handle escaped quotes in keys and values
-    const keyValueRegex = /'([^'\\]*(?:\\.[^'\\]*)*)'\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g;
+    const keyValueRegex =
+      /'([^'\\]*(?:\\.[^'\\]*)*)'\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g;
     let match;
-    
+
     while ((match = keyValueRegex.exec(content)) !== null) {
       const key = match[1].replace(/\\'/g, "'"); // Unescape single quotes in key
       const value = match[2].replace(/\\'/g, "'"); // Unescape single quotes in value
       result[key] = value;
     }
-    
+
     return result;
   } catch (e) {
     console.error(`Error reading file ${filePath}:`, e);
@@ -66,60 +70,67 @@ function updateTranslationFiles(keys: string[]) {
   // First, get all translations from English file
   const enTranslations = parseTranslations(LANGUAGE_FILES.en);
   const enKeys = Object.keys(enTranslations);
-  
+
   // Combine keys from code and English file
   const allKeys = [...new Set([...keys, ...enKeys])];
-  
+
   // Process each language file
   Object.entries(LANGUAGE_FILES).forEach(([lang, filePath]) => {
     const existingTranslations = parseTranslations(filePath);
     const newKeys: string[] = [];
-    
+
     // Find keys that don't exist in the current translations
-    allKeys.forEach(key => {
+    allKeys.forEach((key) => {
       if (existingTranslations[key] === undefined) {
         newKeys.push(key);
       }
     });
-    
+
     if (newKeys.length > 0) {
       // Read the current file content
-      let fileContent = fs.readFileSync(filePath, 'utf8');
-      
+      let fileContent = fs.readFileSync(filePath, "utf8");
+
       // Find the position to insert new translations (before the closing brace)
-      const closingBracePos = fileContent.lastIndexOf('}');
-      
+      const closingBracePos = fileContent.lastIndexOf("}");
+
       if (closingBracePos !== -1) {
         // Format new translations with proper escaping
         const newTranslationsStr = newKeys
-          .map(key => {
+          .map((key) => {
             const escapedKey = escapeForTSString(key);
-            if (lang === 'en') {
+            if (lang === "en") {
               const escapedValue = escapeForTSString(key);
               return `  '${escapedKey}': '${escapedValue}'`;
-            } else if (lang === 'sv') {
+            } else if (lang === "sv") {
               return `  '${escapedKey}': ''`;
             }
-            return '';
+            return "";
           })
-          .join(',\n');
-        
+          .join(",\n");
+
         // Check if there's content before the closing brace
-        const contentBeforeBrace = fileContent.substring(0, closingBracePos).trim();
-        const needsComma = contentBeforeBrace.length > 0 && 
-                          !contentBeforeBrace.endsWith(',') && 
-                          !contentBeforeBrace.endsWith('{');
-        
+        const contentBeforeBrace = fileContent
+          .substring(0, closingBracePos)
+          .trim();
+        const needsComma =
+          contentBeforeBrace.length > 0 &&
+          !contentBeforeBrace.endsWith(",") &&
+          !contentBeforeBrace.endsWith("{");
+
         // Insert new translations with appropriate comma
-        const insertStr = needsComma ? `,\n${newTranslationsStr}` : `\n${newTranslationsStr}`;
-        
-        fileContent = 
-          fileContent.substring(0, closingBracePos).trimEnd() + 
-          insertStr + 
+        const insertStr = needsComma
+          ? `,\n${newTranslationsStr}`
+          : `\n${newTranslationsStr}`;
+
+        fileContent =
+          fileContent.substring(0, closingBracePos).trimEnd() +
+          insertStr +
           fileContent.substring(closingBracePos);
-        
-        fs.writeFileSync(filePath, fileContent, 'utf8');
-        console.log(`Updated ${lang} translations file with ${newKeys.length} new keys`);
+
+        fs.writeFileSync(filePath, fileContent, "utf8");
+        console.log(
+          `Updated ${lang} translations file with ${newKeys.length} new keys`
+        );
       } else {
         console.error(`Could not find closing brace in ${filePath}`);
       }
@@ -131,17 +142,17 @@ function updateTranslationFiles(keys: string[]) {
 
 // Main function
 async function main() {
-  console.log('Extracting translation keys from codebase...');
+  console.log("Extracting translation keys from codebase...");
   const keys = await extractTranslationKeys();
   console.log(`Found ${keys.length} translation keys from code`);
-  
-  console.log('Updating translation files...');
+
+  console.log("Updating translation files...");
   updateTranslationFiles(keys);
-  
-  console.log('Done!');
+
+  console.log("Done!");
 }
 
-main().catch(error => {
-  console.error('Error:', error);
+main().catch((error) => {
+  console.error("Error:", error);
   process.exit(1);
-}); 
+});

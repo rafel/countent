@@ -1,4 +1,4 @@
-import { dbclient } from "@/db/db";
+import { db } from "@/lib/db";
 import {
   NewUser,
   User,
@@ -6,7 +6,7 @@ import {
   userSessions,
   UserSession,
   NewUserSession,
-} from "@/db/schema";
+} from "@/lib/db/schema";
 import { eq, lt, gt, and } from "drizzle-orm";
 import { randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
@@ -18,7 +18,7 @@ export async function createUserWithPassword(
 ): Promise<User | null> {
   try {
     // Check if user already exists
-    const existingUser = await dbclient
+    const existingUser = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -40,7 +40,7 @@ export async function createUserWithPassword(
       permissions: [],
     };
 
-    const newUsers = await dbclient
+    const newUsers = await db
       .insert(users)
       .values(newUserData)
       .returning();
@@ -54,7 +54,7 @@ export async function createUserWithPassword(
 
 export async function getUserByEmail(email: string): Promise<User | null> {
   try {
-    const dbUsers = await dbclient
+    const dbUsers = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -107,7 +107,7 @@ export async function createUserSession(
       expiresat: expiresAt,
     };
 
-    const newSessions = await dbclient
+    const newSessions = await db
       .insert(userSessions)
       .values(sessionData)
       .returning();
@@ -123,7 +123,7 @@ export async function getActiveSession(
   sessionToken: string
 ): Promise<UserSession | null> {
   try {
-    const session = await dbclient
+    const session = await db
       .select()
       .from(userSessions)
       .where(
@@ -146,7 +146,7 @@ export async function updateSessionActivity(
 ): Promise<boolean> {
   try {
     // First check if the session exists
-    const existingSession = await dbclient
+    const existingSession = await db
       .select()
       .from(userSessions)
       .where(eq(userSessions.sessiontoken, sessionToken))
@@ -157,7 +157,7 @@ export async function updateSessionActivity(
       return false;
     }
 
-    await dbclient
+    await db
       .update(userSessions)
       .set({ lastactive: new Date() })
       .where(eq(userSessions.sessiontoken, sessionToken));
@@ -173,7 +173,7 @@ export async function invalidateSession(
   sessionToken: string
 ): Promise<boolean> {
   try {
-    await dbclient
+    await db
       .delete(userSessions)
       .where(eq(userSessions.sessiontoken, sessionToken));
 
@@ -188,7 +188,7 @@ export async function invalidateAllUserSessions(
   userid: string
 ): Promise<boolean> {
   try {
-    await dbclient.delete(userSessions).where(eq(userSessions.userid, userid));
+    await db.delete(userSessions).where(eq(userSessions.userid, userid));
 
     return true;
   } catch (error) {
@@ -201,7 +201,7 @@ export async function getUserActiveSessions(
   userid: string
 ): Promise<UserSession[]> {
   try {
-    const sessions = await dbclient
+    const sessions = await db
       .select()
       .from(userSessions)
       .where(
@@ -221,7 +221,7 @@ export async function getUserActiveSessions(
 
 export async function cleanupExpiredSessions(): Promise<number> {
   try {
-    const result = await dbclient
+    const result = await db
       .delete(userSessions)
       .where(lt(userSessions.expiresat, new Date()));
 

@@ -1,8 +1,8 @@
 import NextAuth, { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { dbclient } from "@/db/db";
+import { db } from "@/lib/db";
 import { cache } from "react";
-import { NewUser, User, users } from "@/db/schema";
+import { NewUser, User, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import GoogleProvider from "next-auth/providers/google";
 import {
@@ -30,7 +30,7 @@ declare module "next-auth" {
   }
 }
 
-// Note: Invite activation is now handled through the /dashboard/invites page
+// Note: Invite activation is now handled through the /d/invites page
 // This allows users to review and accept/decline invitations manually
 
 const authOptions: NextAuthConfig = {
@@ -108,7 +108,7 @@ const authOptions: NextAuthConfig = {
     async signIn({ user, account }) {
       if (!user.email) return false;
 
-      let dbUser: User[] = await dbclient
+      let dbUser: User[] = await db
         .select()
         .from(users)
         .where(eq(users.email, user.email))
@@ -121,7 +121,7 @@ const authOptions: NextAuthConfig = {
           image: user.image,
           permissions: [],
         };
-        const newUser: User[] = await dbclient
+        const newUser: User[] = await db
           .insert(users)
           .values(newUserDate)
           .returning();
@@ -140,7 +140,7 @@ const authOptions: NextAuthConfig = {
     async jwt({ token, user, account }) {
       // If this is a new sign-in, create a session
       if (account && user?.email) {
-        const dbUser = await dbclient
+        const dbUser = await db
           .select()
           .from(users)
           .where(eq(users.email, user.email))
@@ -223,7 +223,7 @@ export const getUser = cache(async (): Promise<User | null> => {
     }
   }
 
-  const dbUser: User[] = await dbclient
+  const dbUser: User[] = await db
     .select()
     .from(users)
     .where(eq(users.email, session.user.email))
@@ -253,7 +253,7 @@ export async function getUserWithSession(): Promise<{ user: User; sessionToken: 
     return null;
   }
 
-  const dbUser: User[] = await dbclient
+  const dbUser: User[] = await db
     .select()
     .from(users)
     .where(eq(users.email, session.user.email))

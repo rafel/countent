@@ -1,7 +1,7 @@
 "use client";
 import { Navigation } from "./components/navigation";
 import { Footer } from "./components/footer";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { ArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef } from "react";

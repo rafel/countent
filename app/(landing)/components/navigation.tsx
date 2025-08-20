@@ -4,9 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/app/components/ui/button";
-import { useLanguage } from "@/hooks/uselanguage";
-import { useIsMobile } from "@/hooks/usemobile";
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "next-themes";
 
 import {
@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
-} from "@/app/components/ui/sidebar";
+} from "@/components/ui/sidebar";
 import { commonSettings } from "@/content/common";
 
 export function Navigation() {

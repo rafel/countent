@@ -110,8 +110,8 @@ export default async function Page({ params }: PageProps) {
 - Consistent shadcn/ui component usage
 
 # Navigation & Routing
-- User with no companies → /dashboard/new
-- User with companies → /dashboard/[firstcompanyid]
+- User with no companies → /d/new
+- User with companies → /d/[firstcompanyid]
 - Use getUserCompanies() utility for company access checks
 - Always validate user access to companies in layouts/pages
 
