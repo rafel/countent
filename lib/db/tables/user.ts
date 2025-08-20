@@ -1,14 +1,19 @@
 import { pgTable, uuid, text, timestamp } from "drizzle-orm/pg-core";
 
+export type UserType = "regular" | "pro" | "ultra";
+export type UserTheme = "light" | "dark" | "system";
+export type UserLanguage = "en" | "sv";
+
 export const users = pgTable("users", {
   userid: uuid("userid").primaryKey().defaultRandom(),
   name: text("name"),
   email: text("email").notNull().unique(),
   image: text("image"),
   password: text("password"),
-  theme: text("theme").default("system"),
-  language: text("language").default("en"),
+  theme: text("theme").default("system").$type<UserTheme>(),
+  language: text("language").default("en").$type<UserLanguage>(),
   permissions: text("permissions").array(),
+  type: text("type").default("regular").notNull().$type<UserType>(),
   createdat: timestamp("createdat").defaultNow().notNull(),
   updatedat: timestamp("updatedat").defaultNow().notNull(),
 });
@@ -32,6 +37,6 @@ export type NewUser = typeof users.$inferInsert;
 export type UserSession = typeof userSessions.$inferSelect;
 export type NewUserSession = typeof userSessions.$inferInsert;
 export type UserPreferences = {
-  theme?: string;
-  language?: string;
+  theme?: UserTheme;
+  language?: UserLanguage;
 };

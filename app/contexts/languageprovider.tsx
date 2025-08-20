@@ -11,6 +11,7 @@ import React, {
 import { useSession } from "next-auth/react";
 import enTranslations from "@/content/en/index";
 import svTranslations from "@/content/sv/index";
+import { UserLanguage } from "@/lib/db/tables/user";
 
 // Define available languages
 export const LANGUAGES = [
@@ -19,7 +20,7 @@ export const LANGUAGES = [
 ] as const;
 
 // Define language type
-export type Language = "en" | "sv";
+export type Language = UserLanguage;
 
 // Define the shape of our translation objects
 type TranslationDictionary = {
