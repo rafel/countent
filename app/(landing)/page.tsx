@@ -1,15 +1,16 @@
 "use client";
 import { Navigation } from "./components/navigation";
 import { Footer } from "./components/footer";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { ArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import Typed from "typed.js";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { ttt } = useLanguage();
+  const router = useRouter();
   const placeholderRef = useRef<HTMLSpanElement>(null);
   const typedRef = useRef<Typed | null>(null);
 
@@ -23,7 +24,9 @@ export default function Home() {
         `${startText} ${ttt("What expenses can I deduct this quarter?")}`,
         `${startText} ${ttt("When is my next VAT filing deadline?")}`,
         `${startText} ${ttt("Are my company ready for balancing of books?")}`,
-        `${startText} ${ttt("How will a company car affact my salary and tax?")}`,
+        `${startText} ${ttt(
+          "How will a company car affact my salary and tax?"
+        )}`,
       ];
 
       typedRef.current = new Typed(placeholderRef.current, {
@@ -97,7 +100,7 @@ export default function Home() {
                 <form className="group flex flex-col gap-2 p-3 w-full rounded-lg border border-muted-foreground/20 bg-background/90 backdrop-blur-sm text-base shadow-xl transition-all duration-150 ease-in-out focus-within:border-foreground/30 hover:border-foreground/20 focus-within:hover:border-foreground/30">
                   <div className="relative flex flex-1 items-center">
                     <textarea
-                      onClick={() => redirect("/dashboard")}
+                      onClick={() => router.push("/d")}
                       className="flex w-full rounded-md px-3 py-3 bg-transparent border-0 resize-none text-[16px] leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-base max-h-[200px] min-h-[80px]"
                       id="chatinput"
                       maxLength={50000}
@@ -111,7 +114,7 @@ export default function Home() {
                   </div>
                   <div className="flex justify-end">
                     <button
-                      onClick={() => redirect("/dashboard")}
+                      onClick={() => router.push("/d")}
                       className="flex h-10 w-10 items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-all duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50 group-focus-within:scale-105"
                     >
                       <ArrowUp className="h-5 w-5 text-primary-foreground" />

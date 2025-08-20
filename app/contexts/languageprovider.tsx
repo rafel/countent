@@ -1,9 +1,9 @@
 "use client";
 
-import React, {
+import {
   createContext,
   useContext,
-  ReactNode,
+  type ReactNode,
   useState,
   useEffect,
   useCallback,

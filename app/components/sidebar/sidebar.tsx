@@ -13,11 +13,11 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/app/components/ui/sidebar";
-import { User } from "@/db/tables/user";
+} from "@/components/ui/sidebar";
+import type { User } from "@/lib/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
-import { useLanguage } from "@/hooks/uselanguage";
-import { Company } from "@/db/tables/company";
+import { useLanguage } from "@/hooks/use-language";
+import type { Company } from "@/lib/db/tables/company";
 import { NavChats } from "./nav-chats";
 
 export function AppSidebar({
@@ -42,7 +42,7 @@ export function AppSidebar({
     navMain: [
       {
         title: ttt("My transactions"),
-        url: "/dashboard/transactions",
+        url: "/d/transactions",
         icon: SquareTerminal,
         isActive: true,
       },

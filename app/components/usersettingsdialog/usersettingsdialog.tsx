@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Settings,
   User,
@@ -8,10 +7,10 @@ import {
 
 import {
   SettingsDialog,
-  SettingsSection,
-} from "@/app/components/ui/settings-dialog";
+  type SettingsSection,
+} from "@/components/ui/settings-dialog";
 import { GeneralSettings } from "./settingsections/generalsettings";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { AccountSettings } from "./settingsections/accountsettings";
 
 export function UserSettingsDialog({

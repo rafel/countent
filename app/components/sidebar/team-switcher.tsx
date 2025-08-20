@@ -11,14 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/app/components/ui/sidebar";
-import { useLanguage } from "@/hooks/uselanguage";
+} from "@/components/ui/sidebar";
+import { useLanguage } from "@/hooks/use-language";
 
 export function TeamSwitcher({
   teams,

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useFormStatus } from "react-dom";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { updateCompany } from "../functions/actions";
-import { Company } from "@/db/tables/company";
+import type { Company } from "@/lib/db/tables/company";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

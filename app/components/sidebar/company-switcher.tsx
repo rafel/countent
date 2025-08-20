@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { ChevronsUpDown, Plus, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -12,15 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/app/components/ui/sidebar";
-import { useLanguage } from "@/hooks/uselanguage";
-import { Company } from "@/db/tables/company";
+} from "@/components/ui/sidebar";
+import { useLanguage } from "@/hooks/use-language";
+import type { Company } from "@/lib/db/tables/company";
 
 export function CompanySwitcher({
   companies,
@@ -36,11 +35,11 @@ export function CompanySwitcher({
   const activeCompany = companies.find(c => c.companyid === currentCompanyId) || companies[0];
 
   const handleCreateCompany = () => {
-    router.push("/dashboard/new");
+    router.push("/d/new");
   };
 
   const handleCompanySelect = (companyId: string) => {
-    router.push(`/dashboard/${companyId}`);
+    router.push(`/d/${companyId}`);
   };
 
   if (!activeCompany) {

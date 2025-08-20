@@ -1,12 +1,11 @@
 "use client";
 
-import * as React from "react";
 import { useState, useEffect, useCallback } from "react";
-import { useLanguage } from "@/hooks/uselanguage";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
-import { Checkbox } from "@/app/components/ui/checkbox";
+import { useLanguage } from "@/hooks/use-language";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/app/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { LogOut, Trash2, AlertTriangle, Monitor } from "lucide-react";
 import {
   logoutUser,

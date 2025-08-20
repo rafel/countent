@@ -1,16 +1,16 @@
 "use server";
 
-import { dbclient } from "@/db/db";
+import { db } from "@/lib/db/db";
 import {
   companies,
   companyUsers,
   companyInvites,
   companyUserDuties,
   users,
-  Company,
-} from "@/db/schema";
+  type Company,
+} from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/db/queries/user";
 
 // Role hierarchy for permission checking
 const ROLE_HIERARCHY = {
@@ -24,7 +24,7 @@ export async function getUserRole(
   userId: string
 ): Promise<string | null> {
   try {
-    const userRole = await dbclient
+    const userRole = await db
       .select({ role: companyUsers.role })
       .from(companyUsers)
       .where(
@@ -76,7 +76,7 @@ export async function getCompanyById(
     }
 
     // Verify user has access to this company
-    const userAccess = await dbclient
+    const userAccess = await db
       .select()
       .from(companyUsers)
       .where(
@@ -91,7 +91,7 @@ export async function getCompanyById(
       return null; // Return null instead of throwing error
     }
 
-    const company = await dbclient
+    const company = await db
       .select()
       .from(companies)
       .where(eq(companies.companyid, companyId))
@@ -115,7 +115,7 @@ export async function updateCompany(
     }
 
     // Verify user has access to this company
-    const userAccess = await dbclient
+    const userAccess = await db
       .select()
       .from(companyUsers)
       .where(
@@ -133,7 +133,7 @@ export async function updateCompany(
       };
     }
 
-    await dbclient
+    await db
       .update(companies)
       .set({
         ...companyData,
@@ -156,7 +156,7 @@ export async function getCompanyUsers(companyId: string) {
     }
 
     // Verify user has access to this company
-    const userAccess = await dbclient
+    const userAccess = await db
       .select()
       .from(companyUsers)
       .where(
@@ -171,7 +171,7 @@ export async function getCompanyUsers(companyId: string) {
       return []; // Return empty array instead of throwing error
     }
 
-    const usersInCompany = await dbclient
+    const usersInCompany = await db
       .select({
         userid: users.userid,
         name: users.name,
@@ -232,14 +232,14 @@ export async function inviteUserToCompany(
     }
 
     // Check if user is already a member
-    const existingUser = await dbclient
+    const existingUser = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
     if (existingUser.length > 0) {
-      const existingMembership = await dbclient
+      const existingMembership = await db
         .select()
         .from(companyUsers)
         .where(
@@ -258,7 +258,7 @@ export async function inviteUserToCompany(
       }
 
       // User exists but not in company - add them directly
-      await dbclient.insert(companyUsers).values({
+      await db.insert(companyUsers).values({
         userid: existingUser[0].userid,
         companyid: companyId,
         role: role,
@@ -268,7 +268,7 @@ export async function inviteUserToCompany(
     }
 
     // Check if invite already exists
-    const existingInvite = await dbclient
+    const existingInvite = await db
       .select()
       .from(companyInvites)
       .where(
@@ -281,7 +281,7 @@ export async function inviteUserToCompany(
 
     if (existingInvite.length > 0) {
       // Update existing invite
-      await dbclient
+      await db
         .update(companyInvites)
         .set({
           role: role,
@@ -291,7 +291,7 @@ export async function inviteUserToCompany(
         .where(eq(companyInvites.inviteid, existingInvite[0].inviteid));
     } else {
       // Create new invite
-      await dbclient.insert(companyInvites).values({
+      await db.insert(companyInvites).values({
         companyid: companyId,
         email: email,
         role: role,
@@ -334,7 +334,7 @@ export async function removeUserFromCompany(
     }
 
     // Remove user from company
-    await dbclient
+    await db
       .delete(companyUsers)
       .where(
         and(
@@ -384,7 +384,7 @@ export async function updateUserRole(
     // If promoting to owner, demote current owner to admin
     if (newRole === "owner") {
       // First, demote the current user from owner to admin
-      await dbclient
+      await db
         .update(companyUsers)
         .set({ role: "admin" })
         .where(
@@ -396,7 +396,7 @@ export async function updateUserRole(
     }
 
     // Update target user's role
-    await dbclient
+    await db
       .update(companyUsers)
       .set({ role: newRole })
       .where(
@@ -426,7 +426,7 @@ export async function getPendingInvites(companyId: string) {
       throw new Error("Access denied");
     }
 
-    const invites = await dbclient
+    const invites = await db
       .select({
         inviteid: companyInvites.inviteid,
         email: companyInvites.email,
@@ -483,7 +483,7 @@ export async function leaveTeam(
     }
 
     // Verify user is actually a member of this company
-    const userMembership = await dbclient
+    const userMembership = await db
       .select()
       .from(companyUsers)
       .where(
@@ -502,7 +502,7 @@ export async function leaveTeam(
     }
 
     // Remove user from company
-    await dbclient
+    await db
       .delete(companyUsers)
       .where(
         and(
@@ -538,18 +538,18 @@ export async function deleteCompany(
 
     // Delete related data in correct order (due to foreign key constraints)
     // 1. Delete company invites
-    await dbclient
+    await db
       .delete(companyInvites)
       .where(eq(companyInvites.companyid, companyId));
 
     // 2. Delete company user duties (if any exist)
-    const companyUserIds = await dbclient
+    const companyUserIds = await db
       .select({ companyuserid: companyUsers.companyuserid })
       .from(companyUsers)
       .where(eq(companyUsers.companyid, companyId));
 
     if (companyUserIds.length > 0) {
-      await dbclient
+      await db
         .delete(companyUserDuties)
         .where(
           eq(companyUserDuties.companyuserid, companyUserIds[0].companyuserid)
@@ -557,12 +557,10 @@ export async function deleteCompany(
     }
 
     // 3. Delete company users
-    await dbclient
-      .delete(companyUsers)
-      .where(eq(companyUsers.companyid, companyId));
+    await db.delete(companyUsers).where(eq(companyUsers.companyid, companyId));
 
     // 4. Finally delete the company
-    await dbclient.delete(companies).where(eq(companies.companyid, companyId));
+    await db.delete(companies).where(eq(companies.companyid, companyId));
 
     return { success: true };
   } catch (error) {

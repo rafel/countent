@@ -1,18 +1,17 @@
 "use client";
 
-import * as React from "react";
 import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
 import { ChevronDown, Globe, Palette } from "lucide-react";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { LANGUAGES, useLanguageContext } from "@/app/contexts/languageprovider";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 
 export function GeneralSettings() {
   const { setTheme, theme } = useTheme();

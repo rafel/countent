@@ -1,5 +1,5 @@
-import { SidebarTrigger } from "@/app/components/ui/sidebar";
-import { Separator } from "@/app/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { DynamicBreadcrumb } from "@/app/components/sidebar/breadcrumb";
 
 export function Header() {

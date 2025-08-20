@@ -1,25 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/app/components/ui/select";
+} from "@/components/ui/select";
 
-import { Badge } from "@/app/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/app/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import {
   Crown,
   Shield,
@@ -38,7 +38,7 @@ import {
   Trash2,
   MoreHorizontal,
 } from "lucide-react";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import {
   getCompanyUsers,
   getPendingInvites,
@@ -46,7 +46,7 @@ import {
   removeUserFromCompany,
   updateUserRole,
 } from "../functions/actions";
-import { LoadingSpinner } from "@/app/components/ui/loading";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 interface CompanyUser {
   userid: string;

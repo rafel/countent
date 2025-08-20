@@ -1,20 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Label } from "@/app/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/app/components/ui/select";
-import { Checkbox } from "@/app/components/ui/checkbox";
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useFormStatus } from "react-dom";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import { updateCompany } from "../functions/actions";
-import { Company } from "@/db/tables/company";
+import type { Company } from "@/lib/db/tables/company";
 
 function SubmitButton() {
   const { pending } = useFormStatus();

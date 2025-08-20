@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 import { Theme } from "@radix-ui/themes";
 import { SharedProviders } from "./sharedproviders";
 

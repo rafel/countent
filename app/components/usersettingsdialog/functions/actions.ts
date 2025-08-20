@@ -1,17 +1,20 @@
 "use server";
 
-import { dbclient } from "@/db/db";
+import { db } from "@/lib/db/db";
 import {
   users,
   companies,
   companyUsers,
   companyInvites,
   companyUserDuties,
-} from "@/db/schema";
+} from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUser, auth } from "@/utils/user";
-import { signOut } from "@/utils/user";
-import { invalidateSession, invalidateAllUserSessions } from "@/utils/auth";
+import { getUser } from "@/lib/db/queries/user";
+import { auth, signOut } from "@/app/(auth)/auth";
+import {
+  invalidateSession,
+  invalidateAllUserSessions,
+} from "@/lib/db/queries/user";
 
 export async function getCurrentUserCompanies(): Promise<{
   ownedCompanies: Array<{ companyid: string; name: string | null }>;
@@ -24,7 +27,7 @@ export async function getCurrentUserCompanies(): Promise<{
     }
 
     // Get companies where user is owner
-    const ownedCompanies = await dbclient
+    const ownedCompanies = await db
       .select({
         companyid: companies.companyid,
         name: companies.name,
@@ -55,7 +58,7 @@ export async function deleteUserAccount(
     }
 
     // Get all companies where user is owner
-    const ownedCompanies = await dbclient
+    const ownedCompanies = await db
       .select({
         companyid: companies.companyid,
         name: companies.name,
@@ -96,45 +99,39 @@ export async function deleteUserAccount(
 
       // Delete company data in correct order (due to foreign key constraints)
       // 1. Delete company invites
-      await dbclient
+      await db
         .delete(companyInvites)
         .where(eq(companyInvites.companyid, companyId));
 
       // 2. Delete company user duties
-      const companyUserIds = await dbclient
+      const companyUserIds = await db
         .select({ companyuserid: companyUsers.companyuserid })
         .from(companyUsers)
         .where(eq(companyUsers.companyid, companyId));
 
       for (const { companyuserid } of companyUserIds) {
-        await dbclient
+        await db
           .delete(companyUserDuties)
           .where(eq(companyUserDuties.companyuserid, companyuserid));
       }
 
       // 3. Delete company users
-      await dbclient
+      await db
         .delete(companyUsers)
         .where(eq(companyUsers.companyid, companyId));
 
       // 4. Delete the company
-      await dbclient
-        .delete(companies)
-        .where(eq(companies.companyid, companyId));
+      await db.delete(companies).where(eq(companies.companyid, companyId));
     }
 
     // Remove user from all remaining companies
-    await dbclient
-      .delete(companyUsers)
-      .where(eq(companyUsers.userid, user.userid));
+    await db.delete(companyUsers).where(eq(companyUsers.userid, user.userid));
 
     // Delete user's invitations
-    await dbclient
-      .delete(companyInvites)
-      .where(eq(companyInvites.email, user.email));
+    await db.delete(companyInvites).where(eq(companyInvites.email, user.email));
 
     // Finally delete the user
-    await dbclient.delete(users).where(eq(users.userid, user.userid));
+    await db.delete(users).where(eq(users.userid, user.userid));
 
     return { success: true };
   } catch (error) {
@@ -150,7 +147,7 @@ export async function logoutUser(): Promise<{ success: boolean }> {
     if (session?.sessionToken) {
       await invalidateSession(session.sessionToken);
     }
-    
+
     await signOut({ redirectTo: "/" });
     return { success: true };
   } catch (error) {
@@ -165,10 +162,10 @@ export async function logoutAllDevices(): Promise<{ success: boolean }> {
     if (!user) {
       return { success: false };
     }
-    
+
     // Invalidate ALL sessions for this user
     await invalidateAllUserSessions(user.userid);
-    
+
     // Also sign out the current session
     await signOut({ redirectTo: "/" });
     return { success: true };

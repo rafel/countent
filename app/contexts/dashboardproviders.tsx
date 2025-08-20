@@ -1,7 +1,7 @@
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/db/queries/user";
 import { ThemeProvider } from "./themeprovider";
 import { LanguageProvider } from "./languageprovider";
-import { Language } from "./languageprovider";
+import type { Language } from "./languageprovider";
 
 interface DashboardProvidersProps {
   children: React.ReactNode;

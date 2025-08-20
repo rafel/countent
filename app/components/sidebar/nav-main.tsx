@@ -7,7 +7,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/app/components/ui/collapsible";
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -17,10 +17,10 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/app/components/ui/sidebar";
+} from "@/components/ui/sidebar";
 import { CompanySettingsDialog } from "@/app/components/companysettingsdialog/companysettingsdialog";
-import { useLanguage } from "@/hooks/uselanguage";
-import { Company } from "@/db/tables/company";
+import { useLanguage } from "@/hooks/use-language";
+import type { Company } from "@/lib/db/tables/company";
 
 export function NavMain({
   items,

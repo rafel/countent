@@ -14,7 +14,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/app/components/ui/avatar";
+} from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +23,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/app/components/ui/sidebar";
-import { User } from "@/db/tables/user";
-import { useLanguage } from "@/hooks/uselanguage";
+} from "@/components/ui/sidebar";
+import type { User } from "@/lib/db/tables/user";
+import { useLanguage } from "@/hooks/use-language";
 
 export function NavUser({
   user,

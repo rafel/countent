@@ -1,6 +1,6 @@
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/db/queries/user";
 import { LanguageProvider } from "./languageprovider";
-import { Language } from "./languageprovider";
+import type { Language } from "./languageprovider";
 
 interface SharedProvidersProps {
   children: React.ReactNode;

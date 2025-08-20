@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
-import { Label } from "@/app/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +14,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/app/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import { Trash2, AlertTriangle, LogOut } from "lucide-react";
-import { useLanguage } from "@/hooks/uselanguage";
+import { useLanguage } from "@/hooks/use-language";
 import {
   deleteCompany,
   leaveTeam,
   getCurrentUserRole,
 } from "../functions/actions";
-import { Company } from "@/db/tables/company";
+import type { Company } from "@/lib/db/tables/company";
 
 export function CompanyDangerZone({ company }: { company: Company }) {
   const { ttt } = useLanguage();
@@ -65,7 +65,7 @@ export function CompanyDangerZone({ company }: { company: Company }) {
       const result = await deleteCompany(company.companyid);
       if (result.success) {
         // Redirect to dashboard or handle success
-        window.location.href = "/dashboard";
+        window.location.href = "/d";
       } else {
         setError(ttt("Failed to delete company"));
       }
@@ -92,7 +92,7 @@ export function CompanyDangerZone({ company }: { company: Company }) {
       const result = await leaveTeam(company.companyid);
       if (result.success) {
         // Redirect to dashboard
-        window.location.href = "/dashboard";
+        window.location.href = "/d";
       } else {
         setLeaveError(ttt("Something went wrong, please contact support"));
       }
@@ -131,11 +131,15 @@ export function CompanyDangerZone({ company }: { company: Company }) {
               {userRole === "owner" ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    {ttt("As the company owner, you cannot leave the company directly.")}
+                    {ttt(
+                      "As the company owner, you cannot leave the company directly."
+                    )}
                   </p>
                   <div className="border border-blue-200 rounded p-4">
                     <h5 className="font-medium text-sm mb-2">
-                      {ttt("To leave this company, you need to transfer ownership to another team member first.")}
+                      {ttt(
+                        "To leave this company, you need to transfer ownership to another team member first."
+                      )}
                     </h5>
                   </div>
                 </div>

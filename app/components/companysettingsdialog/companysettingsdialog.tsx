@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Settings,
   Phone,
@@ -9,14 +8,14 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-import { SettingsDialog, SettingsSection } from "@/app/components/ui/settings-dialog";
+import { SettingsDialog, type SettingsSection } from "@/components/ui/settings-dialog";
 import { CompanyGeneralSettings } from "./settingsections/companygeneralsettings";
 import { CompanyContactInfo } from "./settingsections/companycontactinfo";
 import { CompanyAccountingSettings } from "./settingsections/companyaccountingsettings";
 import { CompanyTeam } from "./settingsections/companyteam";
 import { CompanyDangerZone } from "./settingsections/companydangerzone";
-import { useLanguage } from "@/hooks/uselanguage";
-import { Company } from "@/db/tables/company";
+import { useLanguage } from "@/hooks/use-language";
+import type { Company } from "@/lib/db/tables/company";
 
 export function CompanySettingsDialog({
   open,
