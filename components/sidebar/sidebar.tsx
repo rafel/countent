@@ -19,6 +19,7 @@ import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
 import { useLanguage } from "@/hooks/use-language";
 import { Company } from "@/lib/db/tables/company";
 import { NavChats } from "./nav-chats";
+import PricingDialog from "../pricingdialog/pricingdialog";
 
 export function AppSidebar({
   user,
@@ -32,7 +33,7 @@ export function AppSidebar({
 }) {
   const { ttt } = useLanguage();
   const [openSettings, setOpenSettings] = React.useState(false);
-
+  const [openPricing, setOpenPricing] = React.useState(false);
   // Find the current company
   const currentCompany = companies.find(
     (c) => c.companyid === currentCompanyId
@@ -112,9 +113,18 @@ export function AppSidebar({
         <NavChats currentCompanyId={currentCompanyId} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} onOpenSettings={setOpenSettings} />
+        <NavUser
+          user={user}
+          onOpenSettings={setOpenSettings}
+          onOpenPricing={setOpenPricing}
+        />
       </SidebarFooter>
       <UserSettingsDialog open={openSettings} onOpenChange={setOpenSettings} />
+      <PricingDialog
+        open={openPricing}
+        onOpenChange={setOpenPricing}
+        limitReached={false}
+      />
       <SidebarRail />
     </Sidebar>
   );

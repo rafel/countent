@@ -22,6 +22,7 @@ import { useAutoResume } from '@/hooks/use-auto-resume';
 import { ChatSDKError } from '@/lib/errors';
 import type { Attachment, ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import PricingDialog from './pricingdialog/pricingdialog';
 
 export function Chat({
   id,
@@ -51,6 +52,7 @@ export function Chat({
   const { setDataStream } = useDataStream();
 
   const [input, setInput] = useState<string>('');
+  const [showPricingDialog, setShowPricingDialog] = useState<boolean>(false);
 
   const {
     messages,
@@ -88,10 +90,15 @@ export function Chat({
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
-        toast({
-          type: 'error',
-          description: error.message,
-        });
+        // Check if it's a rate limit error
+        if (error.type === 'rate_limit' && error.surface === 'chat') {
+          setShowPricingDialog(true);
+        } else {
+          toast({
+            type: 'error',
+            description: error.message,
+          });
+        }
       }
     },
   });
@@ -186,6 +193,11 @@ export function Chat({
         isReadonly={isReadonly}
         selectedVisibilityType={visibilityType}
         companyid={companyid}
+      />
+
+      <PricingDialog
+        open={showPricingDialog}
+        onOpenChange={setShowPricingDialog}
       />
     </>
   );

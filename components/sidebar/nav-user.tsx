@@ -10,11 +10,7 @@ import {
 
 import { signOut } from "next-auth/react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,9 +32,11 @@ import { useLanguage } from "@/hooks/use-language";
 export function NavUser({
   user,
   onOpenSettings,
+  onOpenPricing,
 }: {
   user: User;
   onOpenSettings: (open: boolean) => void;
+  onOpenPricing: (open: boolean) => void;
 }) {
   const { isMobile } = useSidebar();
   const { ttt } = useLanguage();
@@ -90,7 +88,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onOpenPricing(true)}>
                 <Sparkles />
                 {ttt("Upgrade to Pro")}
               </DropdownMenuItem>
