@@ -15,13 +15,50 @@ import { ArrowRight, BadgeCheck } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
+import { redirectToCheckout } from "@/lib/stripe/stripe-client";
+import {
+  STRIPE_PRICE_LOOKUP_KEYS,
+  type StripePriceLookupKey,
+} from "@/lib/stripe/stripe-types";
+import { commonSettings } from "@/content/common";
 
 const Pricing = ({
   showFreePlan = false,
+  companyId,
 }: {
   showFreePlan?: boolean;
+  companyId: string;
 }) => {
   const { ttt } = useLanguage();
+  const [isLoading, setIsLoading] = useState<string | null>(null);
+
+  const handleSubscribe = async (
+    lookupKey: StripePriceLookupKey,
+    planId: string
+  ) => {
+    if (planId === "hobby") return; // Free plan doesn't need checkout
+
+    try {
+      setIsLoading(planId);
+      
+      // Determine payer type based on subscription model
+      const payerType = commonSettings.subscriptionModel === "b2b" ? "company" : "user";
+      
+      await redirectToCheckout({
+        lookup_key: lookupKey,
+        success_path: `/d/${companyId}/subscription/success`,
+        cancel_path: `/d/${companyId}/subscription/cancel`,
+        payer_type: payerType,
+        company_id: payerType === "company" ? companyId : undefined,
+      });
+    } catch (error) {
+      console.error("Failed to redirect to checkout:", error);
+      // You could show a toast notification here
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
   const plans = [
     {
       id: "hobby",
@@ -45,6 +82,10 @@ const Pricing = ({
       name: ttt("Pro"),
       type: "paid",
       price: { monthly: 90, yearly: 75 },
+      lookupKeys: {
+        monthly: STRIPE_PRICE_LOOKUP_KEYS.PRO_MONTHLY,
+        yearly: STRIPE_PRICE_LOOKUP_KEYS.PRO_YEARLY,
+      },
       description: ttt("Everything you need to build and scale your business."),
       features: [
         ttt("Unlimited API calls"),
@@ -63,6 +104,10 @@ const Pricing = ({
       price: {
         monthly: ttt("Get in touch for pricing"),
         yearly: ttt("Get in touch for pricing"),
+      },
+      lookupKeys: {
+        monthly: STRIPE_PRICE_LOOKUP_KEYS.ENTERPRISE_MONTHLY,
+        yearly: STRIPE_PRICE_LOOKUP_KEYS.ENTERPRISE_YEARLY,
       },
       description: ttt(
         "Critical security, performance, observability and support."
@@ -115,7 +160,9 @@ const Pricing = ({
                       currency: "USD",
                       maximumFractionDigits: 0,
                     }}
-                    suffix={`/${ttt("month")}, ${ttt("billed")} ${frequency === "monthly" ? ttt("monthly") : ttt("yearly")}.`}
+                    suffix={`/${ttt("month")}, ${ttt("billed")} ${
+                      frequency === "monthly" ? ttt("monthly") : ttt("yearly")
+                    }.`}
                     value={
                       plan.price[frequency as keyof typeof plan.price] as number
                     }
@@ -141,8 +188,19 @@ const Pricing = ({
               <Button
                 className="w-full"
                 variant={plan.popular ? "default" : "secondary"}
+                onClick={() => {
+                  if (plan.lookupKeys) {
+                    const lookupKey =
+                      plan.lookupKeys[
+                        frequency as keyof typeof plan.lookupKeys
+                      ];
+                    handleSubscribe(lookupKey, plan.id);
+                  }
+                }}
+                disabled={isLoading === plan.id}
               >
-                {plan.cta} <ArrowRight className="ml-2 h-4 w-4" />
+                {isLoading === plan.id ? ttt("Loading...") : plan.cta}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>

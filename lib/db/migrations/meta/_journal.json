@@ -29,6 +29,13 @@
       "when": 1755703246999,
       "tag": "0003_flat_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1755812465579,
+      "tag": "0004_whole_bastion",
+      "breakpoints": true
     }
   ]
 }

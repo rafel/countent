@@ -105,6 +105,7 @@
     "resumable-stream": "^2.2.3",
     "sonner": "^2.0.7",
     "streamdown": "^1.0.11",
+    "stripe": "^18.4.0",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",

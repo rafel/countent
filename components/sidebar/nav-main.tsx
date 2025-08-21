@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight, Sparkles, SquareTerminal, Bot, BookOpen, Settings } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -21,36 +21,98 @@ import {
 import { CompanySettingsDialog } from "@/components/companysettingsdialog/companysettingsdialog";
 import { useLanguage } from "@/hooks/use-language";
 import { Company } from "@/lib/db/tables/company";
+import { commonSettings } from "@/content/common";
+import { showPricingDialog } from "@/hooks/use-subscription-dialog";
+import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
 
 export function NavMain({
-  items,
   currentCompany,
+  userId,
 }: {
-  items: {
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    isCompanySettings?: boolean;
-    items?:
-      | {
-          title: string;
-          url: string;
-          isCompanySettings?: boolean;
-        }[]
-      | undefined;
-  }[];
   currentCompany: Company;
+  userId: string;
 }) {
   const [companySettingsOpen, setCompanySettingsOpen] = useState(false);
   const { ttt } = useLanguage();
+
+  const isB2B = commonSettings.subscriptionModel === "b2b";
+
+  // Fetch real subscription data using the client-safe hook
+  const { subscriptionAccess } = useSubscriptionAccess(userId, currentCompany.companyid);
+
+  const isFreePlan = subscriptionAccess?.plan === 'free' || !subscriptionAccess;
+
+  const data = {
+    navMain: [
+      {
+        title: ttt("My transactions"),
+        url: "/d/transactions",
+        icon: SquareTerminal,
+        isActive: true,
+      },
+      {
+        title: ttt("Invoices"),
+        url: "#",
+        icon: Bot,
+        items: [
+          {
+            title: ttt("Invoices"),
+            url: "#",
+          },
+          {
+            title: ttt("Offers"),
+            url: "#",
+          },
+          {
+            title: ttt("Customers"),
+            url: "#",
+          },
+        ],
+      },
+      {
+        title: ttt("Salaries"),
+        url: "#",
+        icon: BookOpen,
+        items: [
+          {
+            title: ttt("Salaries"),
+            url: "#",
+          },
+          {
+            title: ttt("Employees"),
+            url: "#",
+          },
+          {
+            title: ttt("Outlays"),
+            url: "#",
+          },
+        ],
+      },
+      {
+        title: ttt("Company Settings"),
+        url: "#",
+        icon: Settings,
+        isCompanySettings: true,
+      },
+      // Add upgrade button for B2B free plans
+      ...(isB2B && isFreePlan ? [{
+        title: ttt("Upgrade to Pro"),
+        url: "#",
+        icon: Sparkles,
+        isUpgrade: true,
+      }] : []),
+    ],
+  };
   const handleItemClick = (item: {
     title: string;
     url: string;
     isCompanySettings?: boolean;
+    isUpgrade?: boolean;
   }) => {
     if (item.isCompanySettings) {
       setCompanySettingsOpen(true);
+    } else if (item.isUpgrade) {
+      showPricingDialog(userId, currentCompany.companyid);
     } else {
       // Handle regular navigation
       window.location.href = item.url;
@@ -62,9 +124,9 @@ export function NavMain({
       <SidebarGroup>
         <SidebarGroupLabel>{ttt("Platform")}</SidebarGroupLabel>
         <SidebarMenu>
-          {items.map((item) => {
-            // If it's a company settings item, render as direct button
-            if (item.isCompanySettings || !item.items) {
+          {data.navMain.map((item) => {
+            // If it's a company settings or upgrade item, render as direct button
+            if (item.isCompanySettings || item.isUpgrade || !item.items) {
               return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
@@ -98,21 +160,10 @@ export function NavMain({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton
-                            asChild={!subItem.isCompanySettings}
-                            onClick={
-                              subItem.isCompanySettings
-                                ? () => handleItemClick(subItem)
-                                : undefined
-                            }
-                          >
-                            {subItem.isCompanySettings ? (
+                          <SidebarMenuSubButton asChild>
+                            <a href={subItem.url}>
                               <span>{subItem.title}</span>
-                            ) : (
-                              <a href={subItem.url}>
-                                <span>{subItem.title}</span>
-                              </a>
-                            )}
+                            </a>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
@@ -126,11 +177,12 @@ export function NavMain({
       </SidebarGroup>
 
       {/* Company Settings Dialog */}
-              <CompanySettingsDialog
-          open={companySettingsOpen}
-          onOpenChange={setCompanySettingsOpen}
-          company={currentCompany}
-        />
+      <CompanySettingsDialog
+        open={companySettingsOpen}
+        onOpenChange={setCompanySettingsOpen}
+        company={currentCompany}
+        userId={userId}
+      />
     </>
   );
 }

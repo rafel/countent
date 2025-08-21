@@ -15,11 +15,13 @@ const PricingDialog = ({
   open,
   onOpenChange,
   showFreePlan = false,
+  companyId,
   limitReached = true,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   showFreePlan?: boolean;
+  companyId: string;
   limitReached?: boolean;
 }) => {
   const { ttt } = useLanguage();
@@ -40,7 +42,7 @@ const PricingDialog = ({
             {ttt("Choose the plan that's right for you.")}
           </DialogDescription>
         </DialogHeader>
-        <Pricing showFreePlan={showFreePlan} />
+        <Pricing showFreePlan={showFreePlan} companyId={companyId} />
       </DialogContent>
     </Dialog>
   );

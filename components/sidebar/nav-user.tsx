@@ -28,18 +28,28 @@ import {
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/db/tables/user";
 import { useLanguage } from "@/hooks/use-language";
+import { commonSettings } from "@/content/common";
+import { showPricingDialog } from "@/hooks/use-subscription-dialog";
+import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
 
 export function NavUser({
   user,
   onOpenSettings,
-  onOpenPricing,
+  companyId,
 }: {
   user: User;
   onOpenSettings: (open: boolean) => void;
-  onOpenPricing: (open: boolean) => void;
+  companyId?: string;
 }) {
   const { isMobile } = useSidebar();
   const { ttt } = useLanguage();
+
+  const isB2C = commonSettings.subscriptionModel === "b2c";
+
+  // Fetch real subscription data using the client-safe hook
+  const { subscriptionAccess } = useSubscriptionAccess(user.userid, companyId);
+
+  const isFreePlan = subscriptionAccess?.plan === 'free' || !subscriptionAccess;
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -87,12 +97,15 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => onOpenPricing(true)}>
-                <Sparkles />
-                {ttt("Upgrade to Pro")}
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
+            {/* Show upgrade button for B2C free users */}
+            {isB2C && isFreePlan && (
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => showPricingDialog(user.userid, companyId)}>
+                  <Sparkles />
+                  {ttt("Upgrade to Pro")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem

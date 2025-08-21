@@ -198,6 +198,7 @@ export function Chat({
       <PricingDialog
         open={showPricingDialog}
         onOpenChange={setShowPricingDialog}
+        companyId={companyid}
       />
     </>
   );

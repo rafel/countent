@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, Bot, Settings, SquareTerminal } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 
@@ -16,10 +15,8 @@ import {
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
-import { useLanguage } from "@/hooks/use-language";
 import { Company } from "@/lib/db/tables/company";
 import { NavChats } from "./nav-chats";
-import PricingDialog from "../pricingdialog/pricingdialog";
 
 export function AppSidebar({
   user,
@@ -31,10 +28,8 @@ export function AppSidebar({
   currentCompanyId?: string;
   companies?: Company[];
 }) {
-  const { ttt } = useLanguage();
   const [openSettings, setOpenSettings] = React.useState(false);
-  const [openPricing, setOpenPricing] = React.useState(false);
-  // Find the current company
+
   const currentCompany = companies.find(
     (c) => c.companyid === currentCompanyId
   );
@@ -42,61 +37,6 @@ export function AppSidebar({
   if (!currentCompanyId) {
     return null;
   }
-
-  const data = {
-    navMain: [
-      {
-        title: ttt("My transactions"),
-        url: "/d/transactions",
-        icon: SquareTerminal,
-        isActive: true,
-      },
-      {
-        title: ttt("Invoices"),
-        url: "#",
-        icon: Bot,
-        items: [
-          {
-            title: ttt("Invoices"),
-            url: "#",
-          },
-          {
-            title: ttt("Offers"),
-            url: "#",
-          },
-          {
-            title: ttt("Customers"),
-            url: "#",
-          },
-        ],
-      },
-      {
-        title: ttt("Salaries"),
-        url: "#",
-        icon: BookOpen,
-        items: [
-          {
-            title: ttt("Salaries"),
-            url: "#",
-          },
-          {
-            title: ttt("Employees"),
-            url: "#",
-          },
-          {
-            title: ttt("Outlays"),
-            url: "#",
-          },
-        ],
-      },
-      {
-        title: ttt("Company Settings"),
-        url: "#",
-        icon: Settings,
-        isCompanySettings: true,
-      },
-    ],
-  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -108,7 +48,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         {currentCompany && (
-          <NavMain items={data.navMain} currentCompany={currentCompany} />
+          <NavMain currentCompany={currentCompany} userId={user.userid} />
         )}
         <NavChats currentCompanyId={currentCompanyId} />
       </SidebarContent>
@@ -116,14 +56,14 @@ export function AppSidebar({
         <NavUser
           user={user}
           onOpenSettings={setOpenSettings}
-          onOpenPricing={setOpenPricing}
+          companyId={currentCompanyId}
         />
       </SidebarFooter>
-      <UserSettingsDialog open={openSettings} onOpenChange={setOpenSettings} />
-      <PricingDialog
-        open={openPricing}
-        onOpenChange={setOpenPricing}
-        limitReached={false}
+      <UserSettingsDialog
+        open={openSettings}
+        onOpenChange={setOpenSettings}
+        userId={user.userid}
+        companyId={currentCompanyId}
       />
       <SidebarRail />
     </Sidebar>

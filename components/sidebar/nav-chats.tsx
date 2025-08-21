@@ -49,7 +49,7 @@ import { renameChatAction, deleteChatAction } from "@/app/d/[companyid]/c/action
 import Link from "next/link";
 
 export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { ttt } = useLanguage();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -73,6 +73,15 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
     chat: null,
   });
 
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Handle mobile sidebar close on navigation
+  const handleMobileNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   // Fetch chats from the database
   const {
     data: chatsData,
@@ -93,6 +102,10 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
       chat,
       title: chat.title,
     });
+    // Close dropdown on mobile
+    if (isMobile) {
+      setOpenDropdownId(null);
+    }
   };
 
   // Handle delete chat
@@ -101,6 +114,10 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
       open: true,
       chat,
     });
+    // Close dropdown on mobile
+    if (isMobile) {
+      setOpenDropdownId(null);
+    }
   };
 
   // Submit rename
@@ -174,7 +191,11 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
       <SidebarGroupLabel>{ttt("Conversations")}</SidebarGroupLabel>
       <SidebarMenuItem>
         <SidebarMenuButton className="text-sidebar-foreground/70">
-          <Link href={`/d/${currentCompanyId}/c`} className="flex items-center gap-2">
+          <Link 
+            href={`/d/${currentCompanyId}/c`} 
+            className="flex items-center gap-2"
+            onClick={handleMobileNavigation}
+          >
             <Plus className="text-sidebar-foreground/70" />
             <span>{ttt("New Chat")}</span>
           </Link>
@@ -204,11 +225,17 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
           chats.map((chat) => (
             <SidebarMenuItem key={chat.id}>
               <SidebarMenuButton asChild>
-                <Link href={`/d/${currentCompanyId}/c/${chat.id}`}>
+                <Link 
+                  href={`/d/${currentCompanyId}/c/${chat.id}`}
+                  onClick={handleMobileNavigation}
+                >
                   <span className="truncate">{chat.title}</span>
                 </Link>
               </SidebarMenuButton>
-              <DropdownMenu>
+              <DropdownMenu 
+                open={openDropdownId === chat.id} 
+                onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+              >
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuAction showOnHover>
                     <MoreHorizontal />
@@ -242,12 +269,6 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
             </SidebarMenuItem>
           ))
         )}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal className="text-sidebar-foreground/70" />
-            <span>{ttt("More")}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
       </SidebarMenu>
 
       {/* Rename Dialog */}
