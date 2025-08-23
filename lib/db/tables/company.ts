@@ -73,3 +73,10 @@ export const companyInvites = pgTable("companyinvites", {
 
 export type CompanyInvite = typeof companyInvites.$inferSelect;
 export type NewCompanyInvite = typeof companyInvites.$inferInsert;
+
+// User company type for caching
+export type UserCompany = {
+  companyid: typeof companyUsers.$inferSelect.companyid;
+  name: typeof companies.$inferSelect.name;
+  role: typeof companyUsers.$inferSelect.role;
+};

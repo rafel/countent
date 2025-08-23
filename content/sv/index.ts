@@ -284,9 +284,9 @@ export const svTranslations: Record<keyof typeof enTranslations, string> = {
   'Subscription Error': '',
   'There was an issue setting up your subscription': '',
   'Subscription Activated!': '',
-  'Your subscription has been successfully activated for': '',
   'Subscription Canceled': '',
   'Your subscription setup was canceled. No charges were made.': '',
-  'your company': ''} as const;
+  'Your subscription has been successfully activated': '',
+  'Continue': ''} as const;
 
 export default svTranslations;

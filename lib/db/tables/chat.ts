@@ -16,7 +16,7 @@ export type VisibilityType = "public" | "private" | "company";
 
 export const chat = pgTable("chats", {
   id: uuid("chatid").primaryKey().notNull().defaultRandom(),
-  createdAt: timestamp("createdat").notNull(),
+  createdAt: timestamp("createdat").notNull().defaultNow(),
   title: text("title").notNull(),
   userId: uuid("userid")
     .notNull()

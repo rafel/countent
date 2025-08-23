@@ -99,64 +99,22 @@ export async function deleteChatById({ id }: { id: string }) {
 export async function getChatsByUserId({
   id,
   limit,
-  startingAfter,
-  endingBefore,
+  offset = 0,
 }: {
   id: string;
   limit: number;
-  startingAfter: string | null;
-  endingBefore: string | null;
+  offset?: number;
 }) {
   try {
     const extendedLimit = limit + 1;
 
-    const query = (whereCondition?: SQL<unknown>) =>
-      db
-        .select()
-        .from(chat)
-        .where(
-          whereCondition
-            ? and(whereCondition, eq(chat.userId, id))
-            : eq(chat.userId, id)
-        )
-        .orderBy(desc(chat.createdAt))
-        .limit(extendedLimit);
-
-    let filteredChats: Array<Chat> = [];
-
-    if (startingAfter) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, startingAfter))
-        .limit(1);
-
-      if (!selectedChat) {
-        throw new ChatSDKError(
-          "not_found:database",
-          `Chat with id ${startingAfter} not found`
-        );
-      }
-
-      filteredChats = await query(gt(chat.createdAt, selectedChat.createdAt));
-    } else if (endingBefore) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, endingBefore))
-        .limit(1);
-
-      if (!selectedChat) {
-        throw new ChatSDKError(
-          "not_found:database",
-          `Chat with id ${endingBefore} not found`
-        );
-      }
-
-      filteredChats = await query(lt(chat.createdAt, selectedChat.createdAt));
-    } else {
-      filteredChats = await query();
-    }
+    const filteredChats = await db
+      .select()
+      .from(chat)
+      .where(eq(chat.userId, id))
+      .orderBy(desc(chat.createdAt))
+      .limit(extendedLimit)
+      .offset(offset);
 
     const hasMore = filteredChats.length > limit;
 
@@ -174,6 +132,10 @@ export async function getChatsByUserId({
 
 export async function getChatById({ id }: { id: string }) {
   try {
+    if (!id || typeof id !== 'string') {
+      throw new ChatSDKError("bad_request:database", "Invalid chat ID provided");
+    }
+
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
     
     if (!selectedChat) {
@@ -186,7 +148,12 @@ export async function getChatById({ id }: { id: string }) {
       throw error;
     }
     
-    console.error('Database error in getChatById:', error);
+    console.error('Database error in getChatById:', {
+      error,
+      errorType: typeof error,
+      errorMessage: (error as Error)?.message || 'Unknown error',
+      chatId: id
+    });
     throw new ChatSDKError("bad_request:database", "Failed to get chat by id");
   }
 }

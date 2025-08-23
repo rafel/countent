@@ -1,4 +1,4 @@
-import { auth } from '@/utils/user';
+import { auth } from '@/lib/user';
 import { getSuggestionsByDocumentId } from '@/lib/db/queries/chat';
 import { ChatSDKError } from '@/lib/errors';
 

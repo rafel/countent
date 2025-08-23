@@ -10,7 +10,10 @@ import {
   updateSessionActivity,
   generateSessionToken,
   getActiveSession,
-} from "@/utils/auth";
+  getUserActiveSessions,
+  getUserByEmail,
+  createNewUser,
+} from "@/lib/db/queries/user";
 
 declare module "next-auth" {
   interface Session {
@@ -50,7 +53,7 @@ const authOptions: NextAuthConfig = {
         email: { label: "Email", type: "email", placeholder: "m@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         // You need to provide your own logic here that takes the credentials
         // submitted and returns either a object representing a user or value
         // that is false/null if the credentials are invalid.
@@ -107,33 +110,23 @@ const authOptions: NextAuthConfig = {
     },
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user }) {
       if (!user.email) return false;
 
-      let dbUser: User[] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, user.email))
-        .limit(1);
-
-      if (dbUser.length === 0) {
+      if (!(await getUserByEmail(user.email))) {
         const newUserDate: NewUser = {
           email: user.email,
           name: user.name,
           image: user.image,
           permissions: [],
         };
-        const newUser: User[] = await db
-          .insert(users)
-          .values(newUserDate)
-          .returning();
+
+        const newUser = await createNewUser(newUserDate);
 
         if (!newUser) {
           console.error("Error creating user");
           return false;
         }
-
-        dbUser = newUser;
       }
 
       return true;
@@ -166,11 +159,58 @@ const authOptions: NextAuthConfig = {
         }
       }
 
+      // Handle existing tokens that might not have userid (from before this logic was added)
+      // This can happen if the user signed in before we added userid to JWT tokens
+      if (!token.userid && (user?.email || token.email)) {
+        const email = user?.email || token.email;
+        if (email) {
+          const dbUser = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
+
+          if (dbUser.length > 0) {
+            token.userid = dbUser[0].userid;
+            token.type = dbUser[0].type;
+          }
+        }
+      }
+
+      // For existing tokens without sessionToken, try to reuse existing session or create new one
+      if (!token.sessionToken && token.userid) {
+        // First, check if user has any active sessions
+        const activeSessions = await getUserActiveSessions(
+          token.userid as string
+        );
+
+        if (activeSessions.length > 0) {
+          // Reuse the most recently active session
+          const mostRecentSession = activeSessions[activeSessions.length - 1];
+          token.sessionToken = mostRecentSession.sessiontoken;
+        } else {
+          // No active sessions exist, create a new one
+          const sessionToken = generateSessionToken();
+          token.sessionToken = sessionToken;
+
+          // Create session in database
+          await createUserSession(
+            token.userid as string,
+            sessionToken,
+            "Web Browser",
+            undefined,
+            undefined
+          );
+        }
+      }
+
       // Update session activity if session exists
       if (typeof token.sessionToken === "string") {
         const updated = await updateSessionActivity(token.sessionToken);
         if (!updated) {
-          console.warn("Failed to update session activity, session may not exist in database");
+          console.warn(
+            "Failed to update session activity, session may not exist in database"
+          );
         }
       }
 
@@ -178,9 +218,27 @@ const authOptions: NextAuthConfig = {
     },
 
     async session({ session, token }) {
+      // If we have userid in token, use it
       if (typeof token.userid === "string") {
         session.user.id = token.userid;
+      } else if (session.user?.email) {
+        // Fallback: fetch user ID from database if missing from token
+        try {
+          const dbUser = await db
+            .select({ userid: users.userid, type: users.type })
+            .from(users)
+            .where(eq(users.email, session.user.email))
+            .limit(1);
+
+          if (dbUser.length > 0) {
+            session.user.id = dbUser[0].userid;
+            session.user.type = dbUser[0].type;
+          }
+        } catch (error) {
+          console.error("Failed to fetch user ID from database:", error);
+        }
       }
+
       if (typeof token.sessionToken === "string") {
         session.sessionToken = token.sessionToken;
       }
@@ -199,7 +257,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
  * @param sessionToken - The session token to validate
  * @returns true if session is active, false otherwise
  */
-export async function isUserSessionActive(sessionToken: string): Promise<boolean> {
+export async function isUserSessionActive(
+  sessionToken: string
+): Promise<boolean> {
   try {
     const activeSession = await getActiveSession(sessionToken);
     return !!activeSession;
@@ -246,7 +306,10 @@ export const getUser = cache(async (): Promise<User | null> => {
  * Gets the authenticated user along with session information
  * Returns null if user is not authenticated or session is invalid/expired
  */
-export async function getUserWithSession(): Promise<{ user: User; sessionToken: string } | null> {
+export async function getUserWithSession(): Promise<{
+  user: User;
+  sessionToken: string;
+} | null> {
   const session = await auth();
 
   if (!session?.user?.email || !session.sessionToken) return null;

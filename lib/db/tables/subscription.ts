@@ -30,7 +30,7 @@ export const subscriptionpayers = pgTable(
     companyid: uuid("companyid").references(() => companies.companyid), // NULL if payertype = "user"
 
     // Stripe integration
-    stripecustomerid: text("stripecustomerid").notNull().unique(),
+    stripecustomerid: text("stripecustomerid").unique(),
 
     // Billing contact info (can be different from user/company)
     billingemail: text("billingemail").notNull(),
@@ -55,6 +55,9 @@ export const subscriptionpayers = pgTable(
   })
 );
 
+export type SubscriptionPayer = typeof subscriptionpayers.$inferSelect;
+export type NewSubscriptionPayer = typeof subscriptionpayers.$inferInsert;
+
 export const subscriptions = pgTable(
   "subscriptions",
   {
@@ -67,6 +70,8 @@ export const subscriptions = pgTable(
     status: text("status").notNull(),
     stripesubscriptionid: text("stripesubscriptionid").unique(),
     currentperiodend: timestamp("currentperiodend"),
+    cancelat: timestamp("cancelat"),
+    canceledat: timestamp("canceledat"),
     createdat: timestamp("createdat").defaultNow().notNull(),
     updatedat: timestamp("updatedat").defaultNow().notNull(),
   },
@@ -79,8 +84,8 @@ export const subscriptions = pgTable(
   })
 );
 
-export type SubscriptionPayer = typeof subscriptionpayers.$inferSelect;
-export type NewSubscriptionPayer = typeof subscriptionpayers.$inferInsert;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
 
 // Many-to-many: Which companies are covered by this subscription
 export const subscriptioncompanies = pgTable(
@@ -105,6 +110,9 @@ export const subscriptioncompanies = pgTable(
   })
 );
 
+export type SubscriptionCompany = typeof subscriptioncompanies.$inferSelect;
+export type NewSubscriptionCompany = typeof subscriptioncompanies.$inferInsert;
+
 // Many-to-many: Which users have access to this subscription
 export const subscriptionusers = pgTable(
   "subscriptionusers",
@@ -127,12 +135,6 @@ export const subscriptionusers = pgTable(
     }).onDelete("cascade"),
   })
 );
-
-export type Subscription = typeof subscriptions.$inferSelect;
-export type NewSubscription = typeof subscriptions.$inferInsert;
-
-export type SubscriptionCompany = typeof subscriptioncompanies.$inferSelect;
-export type NewSubscriptionCompany = typeof subscriptioncompanies.$inferInsert;
 
 export type SubscriptionUser = typeof subscriptionusers.$inferSelect;
 export type NewSubscriptionUser = typeof subscriptionusers.$inferInsert;
@@ -171,3 +173,9 @@ export const subscriptioninfo = pgTable(
 
 export type SubscriptionInfo = typeof subscriptioninfo.$inferSelect;
 export type NewSubscriptionInfo = typeof subscriptioninfo.$inferInsert;
+
+export type SubscriptionAccess = {
+  hasAccess: boolean;
+  plan: SubscriptionPlans;
+  hasBillingPage: boolean;
+}

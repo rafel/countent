@@ -130,3 +130,30 @@ export function getTextFromMessage(message: ChatMessage): string {
     .map((part) => part.text)
     .join("");
 }
+
+export async function redirect(url: string) {
+  window.location.href = url;
+}
+
+// Helper function to open Stripe Billing Portal in new tab
+export async function redirectNewTab(
+  url: string,
+  onReturn?: () => void // Callback when user returns (for refreshing data)
+) {
+  const portalWindow = window.open(url, "_blank");
+
+  // Optional: Listen for when user returns to refresh data
+  if (onReturn && portalWindow) {
+    const checkClosed = setInterval(() => {
+      if (portalWindow.closed) {
+        clearInterval(checkClosed);
+        onReturn();
+      }
+    }, 1000);
+
+    // Cleanup after 30 minutes to prevent memory leaks
+    setTimeout(() => {
+      clearInterval(checkClosed);
+    }, 30 * 60 * 1000);
+  }
+}

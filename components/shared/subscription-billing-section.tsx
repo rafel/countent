@@ -14,18 +14,17 @@ import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import PricingDialog from "@/components/pricingdialog/pricingdialog";
 import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
-import { redirectToPortal } from "@/lib/stripe/stripe-client";
+import { redirectNewTab } from "@/lib/utils";
+import { toast } from "@/components/toast";
 
 interface SubscriptionBillingSectionProps {
   // For B2B: companyId is required, userId is the current user
   // For B2C: userId is required, companyId is optional
-  userId: string;
   companyId?: string;
   isCompanyContext?: boolean; // true = company settings, false = user settings
 }
 
 export function SubscriptionBillingSection({
-  userId,
   companyId,
   isCompanyContext = false,
 }: SubscriptionBillingSectionProps) {
@@ -33,16 +32,11 @@ export function SubscriptionBillingSection({
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 
-  // Fetch real subscription data using the client-safe hook
-  const { subscriptionAccess, isLoading } = useSubscriptionAccess(
-    userId,
-    companyId
-  );
+  const { subscriptionAccess, isLoading, refetch } = useSubscriptionAccess();
 
   const currentPlan = subscriptionAccess?.plan || "free";
   const isFreePlan = currentPlan === "free";
-  const hasHistoricalSubscriptions =
-    subscriptionAccess?.hasHistoricalSubscriptions || false;
+  const hasBillingPage = subscriptionAccess?.hasBillingPage || false;
 
   const handleBillingHistory = async () => {
     try {
@@ -53,14 +47,42 @@ export function SubscriptionBillingSection({
         ? `/d/${companyId}`
         : `/d/${companyId}`;
 
-      await redirectToPortal({
-        return_path: returnPath,
-        company_id: companyId,
-      });
+      try {
+        const response = await fetch("/api/stripe/portal", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            return_path: returnPath,
+            company_id: companyId,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            `Failed to create portal session: ${response.status} - ${
+              errorData.error || response.statusText
+            }`
+          );
+        }
+
+        const result = await response.json();
+        await redirectNewTab(result.url, async () => {
+          await refetch();
+        });
+      } catch (error) {
+        console.error("Error creating portal session:", error);
+        toast({
+          type: "error",
+          description: ttt("An unexpected error occurred. Please try again."),
+        });
+        throw error;
+      }
     } catch (error) {
       console.error("Failed to open billing portal:", error);
-
-      // If error is "No subscription found", show a helpful message
       if (
         error instanceof Error &&
         error.message.includes("No subscription found")
@@ -122,26 +144,21 @@ export function SubscriptionBillingSection({
             <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
               <Button
                 onClick={() => setShowPricingDialog(true)}
-                className={
-                  hasHistoricalSubscriptions
-                    ? "flex-1 cursor-pointer"
-                    : "w-full cursor-pointer"
-                }
+                className="flex-1 cursor-pointer"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {isFreePlan
                   ? ttt("Upgrade Subscription")
                   : ttt("Manage Subscription")}
               </Button>
-
-              {hasHistoricalSubscriptions && (
-                <Button
-                  variant="outline"
-                  className="flex-1 cursor-pointer"
-                  onClick={handleBillingHistory}
-                  disabled={isLoadingPortal}
-                >
-                  <Calendar className="mr-2 h-4 w-4" />
+              {hasBillingPage && (
+              <Button
+                variant="outline"
+                className="flex-1 cursor-pointer"
+                onClick={handleBillingHistory}
+                disabled={isLoadingPortal}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
                   {isLoadingPortal ? ttt("Loading...") : ttt("Billing History")}
                 </Button>
               )}
@@ -195,6 +212,7 @@ export function SubscriptionBillingSection({
         open={showPricingDialog}
         onOpenChange={setShowPricingDialog}
         companyId={companyId || ""}
+        limitReached={false}
       />
     </>
   );

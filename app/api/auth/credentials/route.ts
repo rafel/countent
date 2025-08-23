@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { verifyPassword } from "@/utils/auth";
+import { verifyPassword, getUserByEmail } from "@/lib/db/queries/user";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,19 +11,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email
-    const dbUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+    const dbUser = await getUserByEmail(email);
 
-    if (dbUser.length === 0 || !dbUser[0].password) {
+    if (!dbUser || !dbUser.password) {
       // Return 200 with null to indicate failed authentication without causing errors
       return NextResponse.json({ user: null }, { status: 200 });
     }
 
     // Verify password
-    const isValid = await verifyPassword(password, dbUser[0].password);
+    const isValid = await verifyPassword(password, dbUser.password);
 
     if (!isValid) {
       // Return 200 with null to indicate failed authentication without causing errors
@@ -36,10 +29,10 @@ export async function POST(request: NextRequest) {
     // Return user data (without password)
     return NextResponse.json({
       user: {
-        id: dbUser[0].userid,
-        email: dbUser[0].email,
-        name: dbUser[0].name,
-        image: dbUser[0].image,
+        id: dbUser.userid,
+        email: dbUser.email,
+        name: dbUser.name,
+        image: dbUser.image,
       },
     });
   } catch (error) {

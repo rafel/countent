@@ -1,18 +1,15 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/utils/user";
-import { getUserCompanies } from "@/utils/company";
+import { auth } from "@/lib/user";
+import { getUserCompanies } from "@/lib/db/queries/company";
 import CancelContent from "./components/cancel-content";
 
 interface PageProps {
-  params: Promise<{ companyid: string }>;
-  searchParams: Promise<{ canceled?: string }>;
+  params: Promise<{ companyid: string }>
 }
 
-export default async function SubscriptionCancelPage({ params, searchParams }: PageProps) {
+export default async function SubscriptionCancelPage({ params }: PageProps) {
   const session = await auth();
   const { companyid } = await params;
-  const { canceled } = await searchParams;
-  console.log(canceled);
 
   if (!session?.user) {
     redirect("/login");
@@ -28,10 +25,7 @@ export default async function SubscriptionCancelPage({ params, searchParams }: P
 
   return (
     <div className="container mx-auto py-8">
-      <CancelContent 
-        company={company} 
-        userId={session.user.id}
-      />
+      <CancelContent company={company} userId={session.user.id} />
     </div>
   );
 }

@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronRight, Sparkles, SquareTerminal, Bot, BookOpen, Settings } from "lucide-react";
+import {
+  ChevronRight,
+  Sparkles,
+  SquareTerminal,
+  Bot,
+  BookOpen,
+  Settings,
+} from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -37,10 +44,9 @@ export function NavMain({
 
   const isB2B = commonSettings.subscriptionModel === "b2b";
 
-  // Fetch real subscription data using the client-safe hook
-  const { subscriptionAccess } = useSubscriptionAccess(userId, currentCompany.companyid);
+  const { subscriptionAccess } = useSubscriptionAccess();
 
-  const isFreePlan = subscriptionAccess?.plan === 'free' || !subscriptionAccess;
+  const isFreePlan = subscriptionAccess?.plan === "free" || !subscriptionAccess;
 
   const data = {
     navMain: [
@@ -95,12 +101,16 @@ export function NavMain({
         isCompanySettings: true,
       },
       // Add upgrade button for B2B free plans
-      ...(isB2B && isFreePlan ? [{
-        title: ttt("Upgrade to Pro"),
-        url: "#",
-        icon: Sparkles,
-        isUpgrade: true,
-      }] : []),
+      ...(isB2B && isFreePlan
+        ? [
+            {
+              title: ttt("Upgrade to Pro"),
+              url: "#",
+              icon: Sparkles,
+              isUpgrade: true,
+            },
+          ]
+        : []),
     ],
   };
   const handleItemClick = (item: {
@@ -181,7 +191,6 @@ export function NavMain({
         open={companySettingsOpen}
         onOpenChange={setCompanySettingsOpen}
         company={currentCompany}
-        userId={userId}
       />
     </>
   );

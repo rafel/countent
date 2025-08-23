@@ -17,6 +17,9 @@ export type Surface =
   | "vote"
   | "document"
   | "suggestions"
+  | "subscription"
+  | "payer"
+  | "stripe"
   | "internal_server_error";
 
 export type ErrorCode = `${ErrorType}:${Surface}`;
@@ -33,6 +36,9 @@ export const visibilityBySurface: Record<Surface, ErrorVisibility> = {
   vote: "response",
   document: "response",
   suggestions: "response",
+  subscription: "response",
+  payer: "response",
+  stripe: "response",
   internal_server_error: "response",
 };
 

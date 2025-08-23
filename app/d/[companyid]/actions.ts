@@ -4,7 +4,7 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import { companies, companyUsers, Company } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/user";
 
 export const getUserCompanies = cache(
   async (userId: string): Promise<Company[]> => {

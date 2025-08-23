@@ -46,10 +46,9 @@ export function NavUser({
 
   const isB2C = commonSettings.subscriptionModel === "b2c";
 
-  // Fetch real subscription data using the client-safe hook
-  const { subscriptionAccess } = useSubscriptionAccess(user.userid, companyId);
+  const { subscriptionAccess } = useSubscriptionAccess();
 
-  const isFreePlan = subscriptionAccess?.plan === 'free' || !subscriptionAccess;
+  const isFreePlan = subscriptionAccess?.plan === "free" || !subscriptionAccess;
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -100,7 +99,9 @@ export function NavUser({
             {/* Show upgrade button for B2C free users */}
             {isB2C && isFreePlan && (
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => showPricingDialog(user.userid, companyId)}>
+                <DropdownMenuItem
+                  onClick={() => showPricingDialog(user.userid, companyId)}
+                >
                   <Sparkles />
                   {ttt("Upgrade to Pro")}
                 </DropdownMenuItem>

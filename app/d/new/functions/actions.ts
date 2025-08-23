@@ -1,15 +1,9 @@
 "use server";
 
-import { db } from "@/lib/db";
-import {
-  companies,
-  companyUsers,
-  NewCompany,
-  NewCompanyUser,
-} from "@/lib/db/tables/company";
-import { eq } from "drizzle-orm";
-import { getUser } from "@/utils/user";
+import { NewCompany } from "@/lib/db/tables/company";
+import { getUser } from "@/lib/user";
 import { redirect } from "next/navigation";
+import { createNewCompany, getUserCompanies } from "@/lib/db/queries/company";
 
 export async function createCompanyAction(formData: FormData) {
   try {
@@ -20,22 +14,23 @@ export async function createCompanyAction(formData: FormData) {
 
     const companyData: NewCompany = {
       name: formData.get("name") as string,
-      orgnumber: formData.get("orgnumber") as string || null,
+      orgnumber: (formData.get("orgnumber") as string) || null,
       bolagsverketid: null, // Removed field
       serialnumber: null, // Removed field
-      type: formData.get("type") as string || null,
-      vatnumber: formData.get("vatnumber") as string || null,
-      email: formData.get("email") as string || null,
-      phone: formData.get("phone") as string || null,
-      contactperson: formData.get("contactperson") as string || null,
-      addressline1: formData.get("addressline1") as string || null,
-      addressline2: formData.get("addressline2") as string || null,
-      postalcode: formData.get("postalcode") as string || null,
-      city: formData.get("city") as string || null,
-      fiscalyearstart: formData.get("fiscalyearstart") as string || null,
-      fiscalyearend: formData.get("fiscalyearend") as string || null,
-      vatreportingperiod: formData.get("vatreportingperiod") as string || null,
-      accountingmethod: formData.get("accountingmethod") as string || null,
+      type: (formData.get("type") as string) || null,
+      vatnumber: (formData.get("vatnumber") as string) || null,
+      email: (formData.get("email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      contactperson: (formData.get("contactperson") as string) || null,
+      addressline1: (formData.get("addressline1") as string) || null,
+      addressline2: (formData.get("addressline2") as string) || null,
+      postalcode: (formData.get("postalcode") as string) || null,
+      city: (formData.get("city") as string) || null,
+      fiscalyearstart: (formData.get("fiscalyearstart") as string) || null,
+      fiscalyearend: (formData.get("fiscalyearend") as string) || null,
+      vatreportingperiod:
+        (formData.get("vatreportingperiod") as string) || null,
+      accountingmethod: (formData.get("accountingmethod") as string) || null,
       hasfirstannualreport: formData.get("hasfirstannualreport") === "on",
     };
 
@@ -53,37 +48,22 @@ export async function createCompanyAction(formData: FormData) {
     }
 
     // Create the company
-    const newCompany = await db
-      .insert(companies)
-      .values(companyData)
-      .returning();
-    
-    if (!newCompany || newCompany.length === 0) {
+    const newCompany = await createNewCompany(companyData, user);
+
+    if (!newCompany) {
       return { success: false, error: "Could not create company" };
     }
 
-    // Create the relationship between user and company with owner role
-    const companyUserData: NewCompanyUser = {
-      userid: user.userid,
-      companyid: newCompany[0].companyid,
-      role: "owner",
-    };
-
-    await db
-      .insert(companyUsers)
-      .values(companyUserData);
-
-    // Success - return the company ID for redirect
     return {
       success: true,
-      companyId: newCompany[0].companyid
+      companyId: newCompany.companyid,
     };
-    
   } catch (error) {
     console.error("Error creating company:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "An unknown error occurred" 
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
     };
   }
 }
@@ -100,12 +80,7 @@ export async function checkUserHasCompanies(): Promise<boolean> {
       return false;
     }
 
-    const userCompanies = await db
-      .select({ companyid: companies.companyid })
-      .from(companyUsers)
-      .innerJoin(companies, eq(companyUsers.companyid, companies.companyid))
-      .where(eq(companyUsers.userid, user.userid))
-      .limit(1);
+    const userCompanies = await getUserCompanies(user.userid);
 
     return userCompanies.length > 0;
   } catch (error) {

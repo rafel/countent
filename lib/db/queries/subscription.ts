@@ -12,6 +12,8 @@ import {
   type SubscriptionCompany,
   type SubscriptionUser,
 } from "@/lib/db/schema";
+import { commonSettings, SubscriptionPlans } from "@/content/common";
+import { SubscriptionAccess } from "../tables/subscription";
 
 // ============================================================================
 // SUBSCRIPTION PAYER CRUD
@@ -75,41 +77,146 @@ export async function updateSubscriptionPayer(
   return payer || null;
 }
 
-// Get payers for a user
-export async function getUserPayers(
-  userId: string
-): Promise<SubscriptionPayer[]> {
-  return await db
-    .select()
-    .from(subscriptionpayers)
-    .where(
-      and(
-        eq(subscriptionpayers.payertype, "user"),
-        eq(subscriptionpayers.userid, userId)
-      )
-    )
-    .orderBy(desc(subscriptionpayers.createdat));
+export async function updateSubscriptionSubscriptionPayerId(
+  subscriptionId: string,
+  payerId: string
+): Promise<SubscriptionPayer | null> {
+  const [payer] = await db
+    .update(subscriptionpayers)
+    .set({
+      subscriptionpayerid: payerId,
+      updatedat: new Date(),
+    })
+    .where(eq(subscriptions.subscriptionid, subscriptionId))
+    .returning();
+  return payer;
 }
 
-// Get payers for a company
-export async function getCompanyPayers(
-  companyId: string
-): Promise<SubscriptionPayer[]> {
-  return await db
-    .select()
-    .from(subscriptionpayers)
-    .where(
-      and(
-        eq(subscriptionpayers.payertype, "company"),
-        eq(subscriptionpayers.companyid, companyId)
-      )
-    )
-    .orderBy(desc(subscriptionpayers.createdat));
+export async function getPayerBySubscriptionId(
+  subscriptionId: string
+): Promise<SubscriptionPayer | null> {
+  const currentSubscription = await getSubscriptionById(subscriptionId);
+  const payer = await getSubscriptionPayerById(
+    currentSubscription?.subscriptionpayerid || ""
+  );
+  return payer || null;
 }
 
 // ============================================================================
 // CORE SUBSCRIPTION CRUD
 // ============================================================================
+
+// Create a B2C personal subscription
+export async function createPersonalSubscription(
+  userId: string,
+  userEmail: string = "",
+  userName: string = "",
+  plan: SubscriptionPlans = "free",
+  stripeCustomerId?: string,
+  stripeSubscriptionId?: string
+) {
+  // 1. Create user payer
+  const payer = await createSubscriptionPayer({
+    payertype: "user",
+    userid: userId,
+    companyid: null,
+    stripecustomerid: stripeCustomerId,
+    billingemail: userEmail,
+    billingname: userName,
+  });
+
+  // 2. Create subscription
+  const subscription = await createSubscription({
+    subscriptionpayerid: payer.subscriptionpayerid,
+    plan,
+    status: "active",
+    stripesubscriptionid: stripeSubscriptionId,
+  });
+
+  // 3. Grant access to the user
+  await addUserToSubscription(subscription.subscriptionid, userId);
+
+  return { payer, subscription };
+}
+
+// Create a B2B subscription (company pays, all members get access)
+export async function createTeamSubscription(
+  companyId: string,
+  companyEmail: string = "",
+  companyName: string = "",
+  memberUserIds: string[] = [],
+  plan: SubscriptionPlans = "free",
+  stripeCustomerId?: string,
+  stripeSubscriptionId?: string
+) {
+  // 1. Create company payer
+  const payer = await createSubscriptionPayer({
+    payertype: "company",
+    userid: null,
+    companyid: companyId,
+    stripecustomerid: stripeCustomerId,
+    billingemail: companyEmail,
+    billingname: companyName,
+  });
+
+  // 2. Create subscription
+  const subscription = await createSubscription({
+    subscriptionpayerid: payer.subscriptionpayerid,
+    plan,
+    status: "active",
+    stripesubscriptionid: stripeSubscriptionId,
+  });
+
+  // 3. Add company to subscription (all company members get access)
+  await addCompanyToSubscription(subscription.subscriptionid, companyId);
+
+  // 4. Optionally grant explicit access to specific users
+  for (const userId of memberUserIds) {
+    await addUserToSubscription(subscription.subscriptionid, userId);
+  }
+
+  return { payer, subscription };
+}
+
+/**
+ * Check if user has subscription access for a specific context
+ * This is the main function to use throughout the app
+ */
+export async function checkSubscriptionAccess(
+  userId: string,
+  companyId?: string
+): Promise<SubscriptionAccess> {
+  try {
+    const currentSubscription = await getCurrentSubscription(
+      userId,
+      companyId!
+    );
+    if (!currentSubscription) {
+      return {
+        hasAccess: false,
+        plan: "free",
+        hasBillingPage: false,
+      };
+    }
+
+    const payer = await getSubscriptionPayerById(
+      currentSubscription.subscriptionpayerid
+    );
+
+    return {
+      hasAccess: true,
+      plan: currentSubscription.plan,
+      hasBillingPage: payer?.stripecustomerid ? true : false,
+    };
+  } catch (error) {
+    console.error("Error checking subscription access:", error);
+    return {
+      hasAccess: false,
+      plan: "free",
+      hasBillingPage: false,
+    };
+  }
+}
 
 // Create a new subscription
 export async function createSubscription(
@@ -186,42 +293,25 @@ export async function updateSubscriptionByStripeId(
   return subscription || null;
 }
 
-// Cancel subscription
-export async function cancelSubscription(
-  subscriptionId: string
-): Promise<Subscription | null> {
-  const [subscription] = await db
-    .update(subscriptions)
-    .set({
-      status: "canceled",
-      updatedat: new Date(),
-    })
-    .where(eq(subscriptions.subscriptionid, subscriptionId))
-    .returning();
-
-  return subscription || null;
-}
-
-// Transfer billing ownership (for when someone leaves company)
-export async function transferBillingOwnership(
-  subscriptionId: string,
-  newPayerId: string
-): Promise<Subscription | null> {
-  const [subscription] = await db
-    .update(subscriptions)
-    .set({
-      subscriptionpayerid: newPayerId,
-      updatedat: new Date(),
-    })
-    .where(eq(subscriptions.subscriptionid, subscriptionId))
-    .returning();
-
-  return subscription || null;
-}
-
 // ============================================================================
 // SUBSCRIPTION ACCESS QUERIES
 // ============================================================================
+
+export async function getCurrentSubscription(
+  userId: string,
+  companyId: string
+): Promise<Subscription | null> {
+  if (commonSettings.subscriptionModel === "b2b") {
+    if (!companyId) {
+      throw new Error("Company ID is required for B2B subscriptions");
+    }
+    const currentSubscription = await getCompanySubscriptions(companyId);
+    return currentSubscription[0] || null;
+  } else {
+    const currentSubscription = await getUserAllSubscriptions(userId);
+    return currentSubscription[0] || null;
+  }
+}
 
 // Get active subscriptions where user is the payer (billing owner)
 export async function getUserOwnedSubscriptions(
@@ -235,6 +325,8 @@ export async function getUserOwnedSubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -277,6 +369,8 @@ export async function getUserActiveSubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -318,6 +412,8 @@ export async function getCompanyActiveSubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -352,6 +448,8 @@ export async function getUserSubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -386,6 +484,8 @@ export async function getCompanySubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -416,6 +516,8 @@ export async function getUserAllSubscriptions(
       status: subscriptions.status,
       stripesubscriptionid: subscriptions.stripesubscriptionid,
       currentperiodend: subscriptions.currentperiodend,
+      cancelat: subscriptions.cancelat,
+      canceledat: subscriptions.canceledat,
       createdat: subscriptions.createdat,
       updatedat: subscriptions.updatedat,
     })
@@ -457,33 +559,6 @@ export async function addCompanyToSubscription(
   return subscriptionCompany;
 }
 
-// Remove company from subscription
-export async function removeCompanyFromSubscription(
-  subscriptionId: string,
-  companyId: string
-): Promise<void> {
-  await db
-    .delete(subscriptioncompanies)
-    .where(
-      and(
-        eq(subscriptioncompanies.subscriptionid, subscriptionId),
-        eq(subscriptioncompanies.companyid, companyId)
-      )
-    );
-}
-
-// Get companies covered by subscription
-export async function getSubscriptionCompanies(
-  subscriptionId: string
-): Promise<string[]> {
-  const companies = await db
-    .select({ companyid: subscriptioncompanies.companyid })
-    .from(subscriptioncompanies)
-    .where(eq(subscriptioncompanies.subscriptionid, subscriptionId));
-
-  return companies.map((c) => c.companyid);
-}
-
 // ============================================================================
 // SUBSCRIPTION USER RELATIONSHIP CRUD
 // ============================================================================
@@ -504,49 +579,10 @@ export async function addUserToSubscription(
   return subscriptionUser;
 }
 
-// Remove user access from subscription
-export async function removeUserFromSubscription(
-  subscriptionId: string,
-  userId: string
-): Promise<void> {
-  await db
-    .delete(subscriptionusers)
-    .where(
-      and(
-        eq(subscriptionusers.subscriptionid, subscriptionId),
-        eq(subscriptionusers.userid, userId)
-      )
-    );
-}
+/**
+ * Business logic for creating different types of subscriptions
+ */
 
-// Get users with access to subscription
-export async function getSubscriptionUsers(
-  subscriptionId: string
-): Promise<string[]> {
-  const users = await db
-    .select({ userid: subscriptionusers.userid })
-    .from(subscriptionusers)
-    .where(eq(subscriptionusers.subscriptionid, subscriptionId));
-
-  return users.map((u) => u.userid);
-}
-
-// ============================================================================
-// CONVENIENCE FUNCTIONS (BACKWARD COMPATIBILITY)
-// ============================================================================
-
-// Get first active subscription for a user (for backward compatibility)
-export async function getUserActiveSubscription(
-  userId: string
-): Promise<Subscription | null> {
-  const subscriptions = await getUserActiveSubscriptions(userId);
-  return subscriptions[0] || null;
-}
-
-// Get first active subscription for a company (for backward compatibility)
-export async function getCompanyActiveSubscription(
-  companyId: string
-): Promise<Subscription | null> {
-  const subscriptions = await getCompanyActiveSubscriptions(companyId);
-  return subscriptions[0] || null;
-}
+/**
+ * Get subscription plan from Stripe price lookup key
+ */

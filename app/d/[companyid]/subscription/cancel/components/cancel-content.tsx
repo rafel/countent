@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/hooks/use-language";
 import { showPricingDialog } from "@/hooks/use-subscription-dialog";
-import { UserCompany } from "@/utils/company";
+import { UserCompany } from "@/lib/db/tables/company";
 
 interface CancelContentProps {
   company: UserCompany;

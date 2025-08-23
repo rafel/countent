@@ -1,4 +1,4 @@
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 import { InviteAcceptance } from "./components/invite-acceptance";
 import { getPendingInvitesForUser } from "./functions/actions";

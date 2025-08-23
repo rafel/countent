@@ -26,12 +26,10 @@ export function CompanySettingsDialog({
   open,
   onOpenChange,
   company,
-  userId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   company: Company;
-  userId: string;
 }) {
   const { ttt } = useLanguage();
   const { currentDialog, closeDialog } = useSubscriptionDialog();
@@ -66,7 +64,6 @@ export function CompanySettingsDialog({
       icon: CreditCard,
       component: (
         <SubscriptionBillingSection 
-          userId={userId}
           companyId={company.companyid}
           isCompanyContext={true}
         />

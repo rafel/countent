@@ -1,4 +1,4 @@
-import { auth } from "@/utils/user";
+import { auth } from "@/lib/user";
 import type { ArtifactKind } from "@/components/artifact";
 import {
   deleteDocumentsByIdAfterTimestamp,

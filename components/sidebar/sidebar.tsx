@@ -62,7 +62,6 @@ export function AppSidebar({
       <UserSettingsDialog
         open={openSettings}
         onOpenChange={setOpenSettings}
-        userId={user.userid}
         companyId={currentCompanyId}
       />
       <SidebarRail />

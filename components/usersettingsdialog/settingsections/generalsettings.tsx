@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LANGUAGES, useLanguageContext } from "@/app/contexts/languageprovider";
+import { LANGUAGES, useLanguageContext } from "@/contexts/languageprovider";
 import { useLanguage } from "@/hooks/use-language";
 
 export function GeneralSettings() {

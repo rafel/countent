@@ -5,36 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1755256900190,
-      "tag": "0000_amused_toro",
+      "when": 1755883543907,
+      "tag": "0000_famous_guardian",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1755354748844,
-      "tag": "0001_smooth_polaris",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1755467048217,
-      "tag": "0002_harsh_jamie_braddock",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1755703246999,
-      "tag": "0003_flat_stick",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1755812465579,
-      "tag": "0004_whole_bastion",
+      "when": 1755942817003,
+      "tag": "0001_true_squadron_sinister",
       "breakpoints": true
     }
   ]

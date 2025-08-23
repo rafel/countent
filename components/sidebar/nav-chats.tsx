@@ -2,8 +2,9 @@
 
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import useSWR from "swr";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import useSWRInfinite from "swr/infinite";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -45,15 +46,19 @@ import {
 import { useLanguage } from "@/hooks/use-language";
 import { fetcher } from "@/lib/utils";
 import type { Chat } from "@/lib/db/tables/chat";
-import { renameChatAction, deleteChatAction } from "@/app/d/[companyid]/c/actions";
+import {
+  renameChatAction,
+  deleteChatAction,
+} from "@/app/d/[companyid]/c/actions";
 import Link from "next/link";
 
 export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const { ttt } = useLanguage();
   const router = useRouter();
+  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
-  
+
   // Dialog states
   const [renameDialog, setRenameDialog] = useState<{
     open: boolean;
@@ -64,7 +69,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
     chat: null,
     title: "",
   });
-  
+
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     chat: Chat | null;
@@ -82,18 +87,63 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
     }
   };
 
-  // Fetch chats from the database
+  // SWR Infinite for pagination
+  const getKey = (pageIndex: number, previousPageData: { chats: Array<Chat>; hasMore: boolean } | null) => {
+    if (previousPageData && !previousPageData.hasMore) return null; // reached the end
+    const limit = 20;
+    const offset = pageIndex * limit;
+    return `/api/chats?limit=${limit}&offset=${offset}`;
+  };
+
   const {
-    data: chatsData,
+    data: pages,
     error,
     isLoading,
     mutate,
-  } = useSWR<{
-    chats: Array<Chat>;
-    hasMore: boolean;
-  }>("/api/chats?limit=10", fetcher);
+    size,
+    setSize,
+    isValidating,
+  } = useSWRInfinite(getKey, fetcher, {
+    revalidateOnFocus: false,
+  });
 
-  const chats = chatsData?.chats || [];
+  // Flatten all pages into a single array of chats and deduplicate by ID
+  const allChats = pages?.flatMap(page => page.chats) || [];
+  const chats = allChats.filter((chat, index, array) => 
+    array.findIndex(c => c.id === chat.id) === index
+  );
+  const hasMore = pages?.[pages.length - 1]?.hasMore ?? false;
+
+  // Helper function to check if a chat is currently active
+  const isActiveChatId = (chatId: string) => {
+    return pathname === `/d/${currentCompanyId}/c/${chatId}`;
+  };
+
+  // Check if we're on the new chat page (no specific chat ID)
+  const isNewChatPage = pathname === `/d/${currentCompanyId}/c`;
+
+  // Infinite scroll effect - listen to the sidebar content scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Find the sidebar content element
+      const sidebarContent = document.querySelector('[data-sidebar="content"]');
+      if (!sidebarContent) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = sidebarContent;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 200; // 200px threshold
+
+      if (isNearBottom && hasMore && !isValidating) {
+        setSize(size + 1);
+      }
+    };
+
+    // Find the sidebar content element and add scroll listener
+    const sidebarContent = document.querySelector('[data-sidebar="content"]');
+    if (sidebarContent) {
+      sidebarContent.addEventListener('scroll', handleScroll);
+      return () => sidebarContent.removeEventListener('scroll', handleScroll);
+    }
+  }, [hasMore, isValidating, size, setSize]);
 
   // Handle rename chat
   const handleRename = (chat: Chat) => {
@@ -127,28 +177,28 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
 
     startTransition(async () => {
       const formData = new FormData();
-      formData.append('chatId', renameDialog.chat!.id);
-      formData.append('title', renameDialog.title.trim());
+      formData.append("chatId", renameDialog.chat!.id);
+      formData.append("title", renameDialog.title.trim());
 
       const result = await renameChatAction(formData);
-      
+
       if (result.success) {
         // Optimistically update the cache
-        mutate((data) => {
-          if (!data) return data;
-          return {
-            ...data,
-            chats: data.chats.map((chat) =>
+        mutate((pages) => {
+          if (!pages) return pages;
+          return pages.map(page => ({
+            ...page,
+            chats: page.chats.map((chat: Chat) =>
               chat.id === renameDialog.chat!.id
                 ? { ...chat, title: renameDialog.title.trim() }
                 : chat
             ),
-          };
+          }));
         }, false);
-        
+
         setRenameDialog({ open: false, chat: null, title: "" });
       } else {
-        console.error('Failed to rename chat:', result.error);
+        console.error("Failed to rename chat:", result.error);
         // You could show a toast notification here
       }
     });
@@ -160,28 +210,33 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
 
     startTransition(async () => {
       const formData = new FormData();
-      formData.append('chatId', deleteDialog.chat!.id);
+      formData.append("chatId", deleteDialog.chat!.id);
 
       const result = await deleteChatAction(formData);
-      
+
       if (result.success) {
         // Optimistically update the cache
-        mutate((data) => {
-          if (!data) return data;
-          return {
-            ...data,
-            chats: data.chats.filter((chat) => chat.id !== deleteDialog.chat!.id),
-          };
+        mutate((pages) => {
+          if (!pages) return pages;
+          return pages.map(page => ({
+            ...page,
+            chats: page.chats.filter(
+              (chat: Chat) => chat.id !== deleteDialog.chat!.id
+            ),
+          }));
         }, false);
-        
+
         setDeleteDialog({ open: false, chat: null });
-        
+
         // If we're currently viewing this chat, redirect to the chat list
-        if (deleteDialog.chat && window.location.pathname.includes(`/c/${deleteDialog.chat.id}`)) {
+        if (
+          deleteDialog.chat &&
+          window.location.pathname.includes(`/c/${deleteDialog.chat.id}`)
+        ) {
           router.push(`/d/${currentCompanyId}/c`);
         }
       } else {
-        console.error('Failed to delete chat:', result.error);
+        console.error("Failed to delete chat:", result.error);
         // You could show a toast notification here
       }
     });
@@ -190,16 +245,18 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>{ttt("Conversations")}</SidebarGroupLabel>
       <SidebarMenuItem>
-        <SidebarMenuButton className="text-sidebar-foreground/70">
-          <Link 
-            href={`/d/${currentCompanyId}/c`} 
-            className="flex items-center gap-2"
-            onClick={handleMobileNavigation}
+        <Link href={`/d/${currentCompanyId}/c`}>
+          <SidebarMenuButton
+            className="text-sidebar-foreground/70 cursor-pointer"
+            isActive={isNewChatPage}
+            onClick={() => {
+              handleMobileNavigation();
+            }}
           >
             <Plus className="text-sidebar-foreground/70" />
             <span>{ttt("New Chat")}</span>
-          </Link>
-        </SidebarMenuButton>
+          </SidebarMenuButton>
+        </Link>
       </SidebarMenuItem>
       <SidebarMenu>
         {isLoading ? (
@@ -224,17 +281,22 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
           // Render chats from database
           chats.map((chat) => (
             <SidebarMenuItem key={chat.id}>
-              <SidebarMenuButton asChild>
-                <Link 
-                  href={`/d/${currentCompanyId}/c/${chat.id}`}
-                  onClick={handleMobileNavigation}
+              <Link href={`/d/${currentCompanyId}/c/${chat.id}`}>
+                <SidebarMenuButton
+                  isActive={isActiveChatId(chat.id)}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    handleMobileNavigation();
+                  }}
                 >
                   <span className="truncate">{chat.title}</span>
-                </Link>
-              </SidebarMenuButton>
-              <DropdownMenu 
-                open={openDropdownId === chat.id} 
-                onOpenChange={(open) => setOpenDropdownId(open ? chat.id : null)}
+                </SidebarMenuButton>
+              </Link>
+              <DropdownMenu
+                open={openDropdownId === chat.id}
+                onOpenChange={(open) =>
+                  setOpenDropdownId(open ? chat.id : null)
+                }
               >
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuAction showOnHover>
@@ -247,7 +309,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
                   side={isMobile ? "bottom" : "right"}
                   align={isMobile ? "end" : "start"}
                 >
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={() => handleRename(chat)}
                     disabled={isPending}
@@ -256,7 +318,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
                     <span>{ttt("Rename")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="text-red-500 cursor-pointer"
                     onClick={() => handleDelete(chat)}
                     disabled={isPending}
@@ -269,12 +331,30 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
             </SidebarMenuItem>
           ))
         )}
+        
+        {/* Loading indicator for infinite scroll */}
+        {isValidating && chats.length > 0 && (
+          <SidebarMenuItem>
+            <SidebarMenuButton disabled>
+              <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
+        
+        {/* End of list indicator */}
+        {!hasMore && chats.length > 0 && (
+          <SidebarMenuItem>
+            <div className="text-xs text-muted-foreground text-center py-2">
+              End of conversations
+            </div>
+          </SidebarMenuItem>
+        )}
       </SidebarMenu>
 
       {/* Rename Dialog */}
-      <Dialog 
-        open={renameDialog.open} 
-        onOpenChange={(open) => 
+      <Dialog
+        open={renameDialog.open}
+        onOpenChange={(open) =>
           setRenameDialog({ open, chat: null, title: "" })
         }
       >
@@ -308,13 +388,15 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setRenameDialog({ open: false, chat: null, title: "" })}
+                onClick={() =>
+                  setRenameDialog({ open: false, chat: null, title: "" })
+                }
                 disabled={isPending}
               >
                 {ttt("Cancel")}
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isPending || !renameDialog.title.trim()}
               >
                 {isPending ? ttt("Saving...") : ttt("Save Changes")}
@@ -325,11 +407,9 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog 
-        open={deleteDialog.open} 
-        onOpenChange={(open) => 
-          setDeleteDialog({ open, chat: null })
-        }
+      <AlertDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => setDeleteDialog({ open, chat: null })}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

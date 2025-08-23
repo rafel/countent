@@ -1,4 +1,4 @@
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/user";
 import { getUserCompanies } from "@/app/d/[companyid]/actions";
 import { getPendingInvitesForUser } from "@/app/d/invites/functions/actions";
 import { redirect } from "next/navigation";

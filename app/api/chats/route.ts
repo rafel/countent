@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/utils/user';
+import { auth } from '@/lib/user';
 import { getChatsByUserId } from '@/lib/db/queries/chat';
 import { ChatSDKError } from '@/lib/errors';
 
@@ -12,15 +12,13 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const startingAfter = searchParams.get('startingAfter');
-    const endingBefore = searchParams.get('endingBefore');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 20);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
 
     const result = await getChatsByUserId({
       id: session.user.id,
       limit,
-      startingAfter,
-      endingBefore,
+      offset,
     });
 
     return NextResponse.json(result);

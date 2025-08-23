@@ -15,12 +15,13 @@ import { ArrowRight, BadgeCheck } from "lucide-react";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/hooks/use-language";
-import { redirectToCheckout } from "@/lib/stripe/stripe-client";
+import { redirectNewTab } from "@/lib/utils";
 import {
   STRIPE_PRICE_LOOKUP_KEYS,
   type StripePriceLookupKey,
-} from "@/lib/stripe/stripe-types";
-import { commonSettings } from "@/content/common";
+} from "@/content/common";
+import { toast } from "@/components/toast";
+import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
 
 const Pricing = ({
   showFreePlan = false,
@@ -31,7 +32,7 @@ const Pricing = ({
 }) => {
   const { ttt } = useLanguage();
   const [isLoading, setIsLoading] = useState<string | null>(null);
-
+  const { refetch } = useSubscriptionAccess();
   const handleSubscribe = async (
     lookupKey: StripePriceLookupKey,
     planId: string
@@ -40,20 +41,41 @@ const Pricing = ({
 
     try {
       setIsLoading(planId);
-      
-      // Determine payer type based on subscription model
-      const payerType = commonSettings.subscriptionModel === "b2b" ? "company" : "user";
-      
-      await redirectToCheckout({
-        lookup_key: lookupKey,
-        success_path: `/d/${companyId}/subscription/success`,
-        cancel_path: `/d/${companyId}/subscription/cancel`,
-        payer_type: payerType,
-        company_id: payerType === "company" ? companyId : undefined,
-      });
+
+      try {
+        const response = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            lookup_key: lookupKey,
+            success_path: `/d/${companyId}/subscription/success`,
+            cancel_path: `/d/${companyId}/subscription/cancel`,
+            return_path: `/d/${companyId}`,
+            company_id: companyId,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create checkout session");
+        }
+
+        const result = await response.json();
+        redirectNewTab(result.url, async () => {
+          await refetch();
+        });
+      } catch (error) {
+        console.error("Error creating checkout session:", error);
+        throw error;
+      }
     } catch (error) {
       console.error("Failed to redirect to checkout:", error);
-      // You could show a toast notification here
+      toast({
+        type: "error",
+        description: ttt("An unexpected error occurred. Please try again."),
+      });
     } finally {
       setIsLoading(null);
     }

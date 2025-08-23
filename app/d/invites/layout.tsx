@@ -1,4 +1,4 @@
-import { SharedProviders } from "@/app/contexts/sharedproviders";
+import { SharedProviders } from "@/contexts/sharedproviders";
 
 interface InvitesLayoutProps {
   children: React.ReactNode;

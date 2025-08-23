@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
-import { auth } from "@/utils/user";
+import { auth } from "@/lib/user";
 import { Chat } from "@/components/chat";
 import { getChatById, getMessagesByChatId } from "@/lib/db/queries/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
@@ -15,7 +15,13 @@ export default async function Page({
 }) {
   const { companyid, chatid } = await params;
 
-  const chat = await getChatById({ id: chatid });
+  let chat;
+  try {
+    chat = await getChatById({ id: chatid });
+  } catch (error) {
+    console.error('Error fetching chat:', error);
+    notFound();
+  }
 
   if (!chat) {
     notFound();

@@ -1,7 +1,7 @@
-import { getUser } from "@/utils/user";
-import { ThemeProvider } from "./themeprovider";
-import { LanguageProvider } from "./languageprovider";
-import { Language } from "./languageprovider";
+import { getUser } from "@/lib/user";
+import { ThemeProvider } from "@/contexts/themeprovider";
+import { LanguageProvider } from "@/contexts/languageprovider";
+import { Language } from "@/contexts/languageprovider";
 import { DataStreamProvider } from '@/components/data-stream-provider';
 
 interface DashboardProvidersProps {

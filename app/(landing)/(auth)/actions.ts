@@ -9,9 +9,12 @@ import {
   companyUserDuties,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUser, auth } from "@/utils/user";
-import { signOut } from "@/utils/user";
-import { invalidateSession, invalidateAllUserSessions } from "@/utils/auth";
+import { getUser, auth } from "@/lib/user";
+import { signOut } from "@/lib/user";
+import {
+  invalidateSession,
+  invalidateAllUserSessions,
+} from "@/lib/db/queries/user";
 
 export async function deleteUserAccount(
   companiesToDelete: string[]

@@ -10,7 +10,7 @@ import {
   Company,
 } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/user";
 
 // Role hierarchy for permission checking
 const ROLE_HIERARCHY = {

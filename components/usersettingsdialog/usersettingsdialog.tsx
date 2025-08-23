@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Settings,
-  User,
-  CreditCard,
-} from "lucide-react";
+import { Settings, User, CreditCard } from "lucide-react";
 
 import {
   SettingsDialog,
@@ -21,12 +17,10 @@ import { commonSettings } from "@/content/common";
 export function UserSettingsDialog({
   open,
   onOpenChange,
-  userId,
   companyId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  userId: string;
   companyId?: string;
 }) {
   const { ttt } = useLanguage();
@@ -39,17 +33,20 @@ export function UserSettingsDialog({
     { name: ttt("General"), icon: Settings, component: <GeneralSettings /> },
     { name: ttt("Account"), icon: User, component: <AccountSettings /> },
     // Conditionally add billing section for B2C model
-    ...(showBillingInUser ? [{
-      name: ttt("Billing & Subscription"),
-      icon: CreditCard,
-      component: (
-        <SubscriptionBillingSection 
-          userId={userId}
-          companyId={companyId}
-          isCompanyContext={false}
-        />
-      ),
-    }] : []),
+    ...(showBillingInUser
+      ? [
+          {
+            name: ttt("Billing & Subscription"),
+            icon: CreditCard,
+            component: (
+              <SubscriptionBillingSection
+                companyId={companyId}
+                isCompanyContext={false}
+              />
+            ),
+          },
+        ]
+      : []),
   ];
 
   // Handle subscription dialog integration
@@ -74,7 +71,7 @@ export function UserSettingsDialog({
         case "usage":
         case "plans":
         case "history":
-          return sections.find(s => s.name === ttt("Billing & Subscription"));
+          return sections.find((s) => s.name === ttt("Billing & Subscription"));
         default:
           return undefined;
       }

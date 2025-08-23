@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Theme } from "@radix-ui/themes";
-import { SharedProviders } from "./sharedproviders";
+import { SharedProviders } from "@/contexts/sharedproviders";
 
 interface LandingProvidersProps {
   children: React.ReactNode;

@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserWithSession } from "@/utils/user";
-import { checkSubscriptionAccess } from "@/lib/subscription/subscription-access";
+import { getUserWithSession } from "@/lib/user";
+import { checkSubscriptionAccess } from "@/lib/db/queries/subscription";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const user = await getUserWithSession();
-    
+
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const companyId = searchParams.get("companyId");
+    const body = await request.json();
+    const { companyId } = body;
 
     const subscriptionAccess = await checkSubscriptionAccess(
       user.user.userid,

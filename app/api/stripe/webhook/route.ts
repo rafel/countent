@@ -12,6 +12,7 @@ import {
   handleSubscriptionTrialWillEnd,
   handleSubscriptionPaused,
   handleSubscriptionResumed,
+  handleCustomerDeleted,
 } from "@/lib/stripe/webhook-handlers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -80,9 +81,7 @@ export async function POST(request: NextRequest) {
         break;
 
       case "customer.deleted":
-        console.log(`🗑️ Customer deleted: ${event.data.object.id}`);
-        // TODO: Handle customer deletion - might need to clean up subscription payers
-        // For now, just log it since the customer deletion will cascade through foreign keys
+        await handleCustomerDeleted(event.data.object as Stripe.Customer);
         break;
 
       // Invoice/Payment events
@@ -99,9 +98,6 @@ export async function POST(request: NextRequest) {
         console.log(`Checkout session completed: ${event.data.object.id}`);
         // The subscription.created event will handle the actual subscription creation
         break;
-
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });

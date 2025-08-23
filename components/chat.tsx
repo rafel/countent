@@ -16,7 +16,7 @@ import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
 import type { Session } from 'next-auth';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import { useAutoResume } from '@/hooks/use-auto-resume';
 import { ChatSDKError } from '@/lib/errors';
@@ -43,16 +43,21 @@ export function Chat({
   autoResume: boolean;
   companyid: string;
 }) {
+  const { mutate } = useSWRConfig();
+  const { setDataStream } = useDataStream();
+  const router = useRouter();
+
+  const [input, setInput] = useState<string>('');
+  const [showPricingDialog, setShowPricingDialog] = useState<boolean>(false);
+  
+  // Track if this is a new chat (no initial messages) and if we've updated the URL
+  const isNewChat = initialMessages.length === 0;
+  const [hasUpdatedUrl, setHasUpdatedUrl] = useState<boolean>(false);
+
   const { visibilityType } = useChatVisibility({
     chatId: id,
     initialVisibilityType,
   });
-
-  const { mutate } = useSWRConfig();
-  const { setDataStream } = useDataStream();
-
-  const [input, setInput] = useState<string>('');
-  const [showPricingDialog, setShowPricingDialog] = useState<boolean>(false);
 
   const {
     messages,
@@ -87,6 +92,19 @@ export function Chat({
     },
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
+      
+      // For new chats, update the URL after the first message is complete
+      if (isNewChat && !hasUpdatedUrl) {
+        setHasUpdatedUrl(true);
+        // Refresh the chat list in the sidebar - use a pattern to match SWR Infinite keys
+        mutate(
+          key => typeof key === 'string' && key.startsWith('/api/chats'),
+          undefined,
+          { revalidate: true }
+        );
+        // Update URL without page refresh - keeps same UI state
+        router.replace(`/d/${companyid}/c/${id}`, { scroll: false });
+      }
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
@@ -116,7 +134,7 @@ export function Chat({
       });
 
       setHasAppendedQuery(true);
-      window.history.replaceState({}, '', `/d/${companyid}/c`);
+      window.history.replaceState({}, '', `/d/${companyid}/c/${id}`);
     }
   }, [query, sendMessage, hasAppendedQuery, id, companyid]);
 

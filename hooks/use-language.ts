@@ -3,7 +3,7 @@ import {
   useLanguageContext,
   TranslationKey,
   translations,
-} from "@/app/contexts/languageprovider";
+} from "@/contexts/languageprovider";
 
 export function useLanguage() {
   const { language, setLanguage, isLoaded } = useLanguageContext();

@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { type UserPreferences, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/utils/user";
-import { LANGUAGES } from "@/app/contexts/languageprovider";
+import { auth } from "@/lib/user";
+import { LANGUAGES } from "@/contexts/languageprovider";
 
 export async function GET() {
   try {

@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { companyInvites, companyUsers, companies, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { getUser } from "@/utils/user";
+import { getUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 
 export interface PendingInviteWithCompany {
