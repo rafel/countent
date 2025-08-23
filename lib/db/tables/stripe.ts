@@ -2,15 +2,35 @@ import {
   pgTable,
   text,
   timestamp,
-  varchar,
   integer,
   decimal,
   boolean,
   foreignKey,
+  jsonb,
+  uuid,
 } from "drizzle-orm/pg-core";
+import { SubscriptionModels } from "@/content/common";
+
+export type StripeMetadata = {
+  user_id?: string;
+  company_id?: string;
+  model?: SubscriptionModels;
+  subscriptionid?: string;
+};
+
+export type NewStripeMetadata = {
+  user_id: string;
+  company_id?: string;
+  model: SubscriptionModels;
+  subscriptionid: string;
+};
 
 export const stripecustomers = pgTable("stripecustomers", {
-  stripecustomerid: varchar("stripecustomerid").primaryKey(),
+  stripecustomerid: text("stripecustomerid").primaryKey(),
+  name: text("name"),
+  email: text("email"),
+  active: boolean("active").default(true),
+  metadata: jsonb("metadata").default("{}").$type<StripeMetadata>(),
   createdat: timestamp("createdat").defaultNow().notNull(),
   updatedat: timestamp("updatedat").defaultNow().notNull(),
 });
@@ -18,61 +38,44 @@ export const stripecustomers = pgTable("stripecustomers", {
 export type StripeCustomer = typeof stripecustomers.$inferSelect;
 export type NewStripeCustomer = typeof stripecustomers.$inferInsert;
 
-export const stripeproducts = pgTable("stripeproducts", {
-  stripeproductid: varchar("stripeproductid").primaryKey(),
-  active: boolean("active"),
-  name: text("name"),
-  description: text("description"),
-  image: text("image"),
-  metadata: text("metadata"), // Storing JSON as text, to be parsed in application
-  createdat: timestamp("createdat").defaultNow().notNull(),
-  updatedat: timestamp("updatedat").defaultNow().notNull(),
-});
-
-export type StripeProduct = typeof stripeproducts.$inferSelect;
-export type NewStripeProduct = typeof stripeproducts.$inferInsert;
-
-export const stripeprices = pgTable("stripeprices", {
-  stripepriceid: varchar("stripepriceid").primaryKey(),
-  stripeproductid: varchar("stripeproductid").references(
-    () => stripeproducts.stripeproductid
-  ),
-  active: boolean("active"),
-  currency: text("currency"),
-  description: text("description"),
-  type: text("type"), // one_time or recurring
-  unitamount: decimal("unitamount"),
-  interval: text("interval"), // day, week, month or year
-  intervalcount: integer("intervalcount"),
-  trialperioddays: integer("trialperioddays"),
-  metadata: text("metadata"),
-  createdat: timestamp("createdat").defaultNow().notNull(),
-  updatedat: timestamp("updatedat").defaultNow().notNull(),
-});
-
-export type StripePrice = typeof stripeprices.$inferSelect;
-export type NewStripePrice = typeof stripeprices.$inferInsert;
-
-export const stripesubscriptions = pgTable("stripesubscriptions", {
-  stripesubscriptionid: varchar("stripesubscriptionid").primaryKey(),
-  stripecustomerid: varchar("stripecustomerid"),
-  status: text("status"),
-  stripepriceid: varchar("stripepriceid").references(
-    () => stripeprices.stripepriceid
-  ),
-  quantity: integer("quantity"),
-  cancelatperiodend: boolean("cancelatperiodend"),
-  currentperiodstart: timestamp("currentperiodstart"),
-  currentperiodend: timestamp("currentperiodend"),
-  endedat: timestamp("endedat"),
-  cancelat: timestamp("cancelat"),
-  canceledat: timestamp("canceledat"),
-  trialstart: timestamp("trialstart"),
-  trialend: timestamp("trialend"),
-  metadata: text("metadata"),
-  createdat: timestamp("createdat").defaultNow().notNull(),
-  updatedat: timestamp("updatedat").defaultNow().notNull(),
-});
+export const stripesubscriptions = pgTable(
+  "stripesubscriptions",
+  {
+    stripesubscriptionid: text("stripesubscriptionid").primaryKey(),
+    stripecustomerid: text("stripecustomerid"),
+    stripecustomer: text("stripecustomer"),
+    status: text("status"),
+    plan: text("plan"),
+    cancelatperiodend: boolean("cancelatperiodend"),
+    currentperiodstart: timestamp("currentperiodstart"),
+    currentperiodend: timestamp("currentperiodend"),
+    endedat: timestamp("endedat"),
+    cancelat: timestamp("cancelat"),
+    canceledat: timestamp("canceledat"),
+    trialstart: timestamp("trialstart"),
+    trialend: timestamp("trialend"),
+    amount: decimal("amount"),
+    currency: text("currency"),
+    interval: text("interval"),
+    intervalcount: integer("intervalcount"),
+    subscriptionid: text("subscriptionid"),
+    userid: text("userid"),
+    companyid: text("companyid"),
+    metadata: jsonb("metadata").default("{}").$type<StripeMetadata>(),
+    active: boolean("active").default(true),
+    createdat: timestamp("createdat").defaultNow().notNull(),
+    updatedat: timestamp("updatedat").defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      customerFk: foreignKey({
+        columns: [table.stripecustomerid],
+        foreignColumns: [stripecustomers.stripecustomerid],
+        name: "stripe_sub_customer_fk",
+      }),
+    };
+  }
+);
 
 export type StripeSubscription = typeof stripesubscriptions.$inferSelect;
 export type NewStripeSubscription = typeof stripesubscriptions.$inferInsert;
@@ -80,9 +83,8 @@ export type NewStripeSubscription = typeof stripesubscriptions.$inferInsert;
 export const stripeinvoices = pgTable(
   "stripeinvoices",
   {
-    stripeinvoiceid: varchar("stripeinvoiceid").primaryKey(),
-    stripesubscriptionid: varchar("stripesubscriptionid"),
-    stripecustomerid: varchar("stripecustomerid"),
+    stripeinvoiceid: text("stripeinvoiceid").primaryKey(),
+    stripecustomerid: text("stripecustomerid"),
     amountdue: decimal("amountdue"),
     amountpaid: decimal("amountpaid"),
     amountremaining: decimal("amountremaining"),
@@ -90,18 +92,16 @@ export const stripeinvoices = pgTable(
     currency: text("currency"),
     hostedinvoiceurl: text("hostedinvoiceurl"),
     status: text("status"),
+    active: boolean("active").default(true),
     createdat: timestamp("createdat").defaultNow().notNull(),
     updatedat: timestamp("updatedat").defaultNow().notNull(),
   },
   (table) => {
     return {
-      subscriptionFk: foreignKey({
-        columns: [table.stripesubscriptionid],
-        foreignColumns: [stripesubscriptions.stripesubscriptionid],
-      }),
       customerFk: foreignKey({
         columns: [table.stripecustomerid],
         foreignColumns: [stripecustomers.stripecustomerid],
+        name: "stripe_inv_customer_fk",
       }),
     };
   }
@@ -109,3 +109,9 @@ export const stripeinvoices = pgTable(
 
 export type StripeInvoice = typeof stripeinvoices.$inferSelect;
 export type NewStripeInvoice = typeof stripeinvoices.$inferInsert;
+
+// Joined types for complex queries
+export type StripeSubscriptionWithCustomer = {
+  subscription: StripeSubscription;
+  customer: StripeCustomer;
+};

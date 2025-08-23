@@ -1,34 +1,33 @@
-import { auth } from '@/lib/user';
-import type { NextRequest } from 'next/server';
-import { getChatsByUserId } from '@/lib/db/queries/chat';
-import { ChatSDKError } from '@/lib/errors';
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/user";
+import { getChatsByUserId } from "@/lib/db/queries/chat";
+import { ChatSDKError } from "@/lib/errors";
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
+export async function GET(request: Request) {
+  try {
+    const session = await auth();
 
-  const limit = Number.parseInt(searchParams.get('limit') || '10');
-  const startingAfter = searchParams.get('starting_after');
-  const endingBefore = searchParams.get('ending_before');
+    if (!session?.user) {
+      return new ChatSDKError("unauthorized:chat").toResponse();
+    }
 
-  if (startingAfter && endingBefore) {
-    return new ChatSDKError(
-      'bad_request:api',
-      'Only one of starting_after or ending_before can be provided.',
-    ).toResponse();
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 20);
+    const offset = Math.max(parseInt(searchParams.get("offset") || "0", 10), 0);
+
+    const result = await getChatsByUserId({
+      id: session.user.id,
+      limit,
+      offset,
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof ChatSDKError) {
+      return error.toResponse();
+    }
+
+    console.error("Unexpected error in chats route:", error);
+    return new ChatSDKError("internal_server_error:chat").toResponse();
   }
-
-  const session = await auth();
-
-  if (!session?.user) {
-    return new ChatSDKError('unauthorized:chat').toResponse();
-  }
-
-  const chats = await getChatsByUserId({
-    id: session.user.id,
-    limit,
-    startingAfter,
-    endingBefore,
-  });
-
-  return Response.json(chats);
 }

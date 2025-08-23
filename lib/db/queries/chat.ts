@@ -1,17 +1,6 @@
 import "server-only";
 
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  gt,
-  gte,
-  inArray,
-  lt,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, inArray } from "drizzle-orm";
 
 import { User, users } from "../tables/user";
 
@@ -23,12 +12,11 @@ import {
   message,
   vote,
   type DBMessage,
-  type Chat,
   stream,
   type VisibilityType,
 } from "../tables/chat";
-import { generateHashedPassword } from "../../utils";
-import { ChatSDKError } from "../../errors";
+import { generateHashedPassword } from "@/lib/utils";
+import { ChatSDKError } from "@/lib/errors";
 import { db } from "@/lib/db";
 import { ArtifactKind } from "@/lib/types";
 
@@ -132,27 +120,33 @@ export async function getChatsByUserId({
 
 export async function getChatById({ id }: { id: string }) {
   try {
-    if (!id || typeof id !== 'string') {
-      throw new ChatSDKError("bad_request:database", "Invalid chat ID provided");
+    if (!id || typeof id !== "string") {
+      throw new ChatSDKError(
+        "bad_request:database",
+        "Invalid chat ID provided"
+      );
     }
 
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
-    
+
     if (!selectedChat) {
-      throw new ChatSDKError("not_found:database", `Chat with id ${id} not found`);
+      throw new ChatSDKError(
+        "not_found:database",
+        `Chat with id ${id} not found`
+      );
     }
-    
+
     return selectedChat;
   } catch (error) {
     if (error instanceof ChatSDKError) {
       throw error;
     }
-    
-    console.error('Database error in getChatById:', {
+
+    console.error("Database error in getChatById:", {
       error,
       errorType: typeof error,
-      errorMessage: (error as Error)?.message || 'Unknown error',
-      chatId: id
+      errorMessage: (error as Error)?.message || "Unknown error",
+      chatId: id,
     });
     throw new ChatSDKError("bad_request:database", "Failed to get chat by id");
   }

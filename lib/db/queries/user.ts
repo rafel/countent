@@ -19,13 +19,13 @@ export async function createNewUser(userData: NewUser): Promise<User | null> {
       throw new Error("User already exists");
     }
 
-    const newUsers = await db.insert(users).values(userData).returning();
+    const [user] = await db.insert(users).values(userData).returning();
 
     if (commonSettings.subscriptionModel === "b2c") {
-      await createPersonalSubscription(newUsers[0].userid);
+      await createPersonalSubscription(user);
     }
 
-    return newUsers[0] || null;
+    return user || null;
   } catch (error) {
     console.error("Error creating user:", error);
     return null;

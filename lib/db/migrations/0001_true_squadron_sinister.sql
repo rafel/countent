@@ -1,1 +1,0 @@
-ALTER TABLE "chats" ALTER COLUMN "createdat" SET DEFAULT now();

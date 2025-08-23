@@ -10,6 +10,7 @@ export const commonSettings = {
   siteImageWidth: 1200,
   siteImageHeight: 630,
   subscriptionModel: "b2b" as SubscriptionModels,
+  defaultSubscriptionPlan: "free" as SubscriptionPlans,
 };
 
 export type SubscriptionModels = "b2c" | "b2b";

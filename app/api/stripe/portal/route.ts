@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { auth } from "@/lib/user";
 import { ChatSDKError } from "@/lib/errors";
-import {
-  getSubscriptionPayerById,
-  getCurrentSubscription,
-} from "@/lib/db/queries/subscription";
+import { getCurrentSubscription } from "@/lib/db/queries/subscription";
+import { getStripeSubscriptionByStripeId } from "@/lib/db/queries/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil",
@@ -32,23 +30,23 @@ export async function POST(request: NextRequest) {
       company_id!
     );
 
-    if (!subscription) {
-      throw new ChatSDKError("not_found:subscription").toResponse();
+    if (!subscription || !subscription.stripesubscriptionid) {
+      return new ChatSDKError("not_found:subscription").toResponse();
     }
 
-    const payer = await getSubscriptionPayerById(
-      subscription.subscriptionpayerid
+    const stripeSubscription = await getStripeSubscriptionByStripeId(
+      subscription.stripesubscriptionid
     );
 
-    if (!payer || !payer.stripecustomerid) {
-      throw new ChatSDKError("not_found:payer").toResponse();
+    if (!stripeSubscription || !stripeSubscription.customer.stripecustomerid) {
+      return new ChatSDKError("not_found:payer").toResponse();
     }
 
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
 
     // Create billing portal session
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: payer.stripecustomerid,
+      customer: stripeSubscription.customer.stripecustomerid,
       return_url: `${baseUrl}${return_path}`,
     });
 

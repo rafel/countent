@@ -15,3 +15,6 @@ db-migrate-push:
 
 db-connect:
 	psql $(shell grep "DATABASE_URL=" .env | cut -d'=' -f2)
+
+dev-stripe-webhook:
+	stripe listen --forward-to localhost:3000/api/stripe/webhook

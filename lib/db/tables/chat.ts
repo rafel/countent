@@ -29,7 +29,7 @@ export const chat = pgTable("chats", {
 
 export type Chat = InferSelectModel<typeof chat>;
 
-export const message = pgTable("messages", {
+export const message = pgTable("chatmessages", {
   id: uuid("messageid").primaryKey().notNull().defaultRandom(),
   chatId: uuid("chatid")
     .notNull()
@@ -43,7 +43,7 @@ export const message = pgTable("messages", {
 export type DBMessage = InferSelectModel<typeof message>;
 
 export const vote = pgTable(
-  "votes",
+  "chatvotes",
   {
     chatId: uuid("chatid")
       .notNull()
@@ -86,7 +86,7 @@ export const document = pgTable(
 export type Document = InferSelectModel<typeof document>;
 
 export const suggestion = pgTable(
-  "suggestions",
+  "chatsuggestions",
   {
     id: uuid("suggestionid").notNull().defaultRandom(),
     documentId: uuid("documentid").notNull(),
@@ -113,7 +113,7 @@ export const suggestion = pgTable(
 export type Suggestion = InferSelectModel<typeof suggestion>;
 
 export const stream = pgTable(
-  "streams",
+  "chatstreams",
   {
     id: uuid("streamid").primaryKey().notNull().defaultRandom(),
     chatId: uuid("chatid").notNull(),

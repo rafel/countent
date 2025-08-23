@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import {
-  handleSubscriptionCreated,
-  handleSubscriptionUpdated,
-  handleSubscriptionDeleted,
-  handleCustomerCreated,
-  handleCustomerUpdated,
-  handleInvoicePaymentSucceeded,
-  handleInvoicePaymentFailed,
-  handleSubscriptionTrialWillEnd,
-  handleSubscriptionPaused,
-  handleSubscriptionResumed,
-  handleCustomerDeleted,
-} from "@/lib/stripe/webhook-handlers";
+  upsertStripeCustomer,
+  deleteStripeCustomer,
+  upsertStripeSubscription,
+  deleteStripeSubscription,
+  upsertStripeInvoice,
+  deleteStripeInvoice,
+} from "@/lib/db/queries/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil",
@@ -44,59 +39,88 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log(`🔔 Webhook received: ${event.type} - ${event.id}`);
+
     // Handle the event
     switch (event.type) {
-      // Subscription events
-      case "customer.subscription.created":
-        await handleSubscriptionCreated(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.updated":
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.trial_will_end":
-        await handleSubscriptionTrialWillEnd(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.paused":
-        await handleSubscriptionPaused(event.data.object as Stripe.Subscription);
-        break;
-
-      case "customer.subscription.resumed":
-        await handleSubscriptionResumed(event.data.object as Stripe.Subscription);
-        break;
-
       // Customer events
       case "customer.created":
-        await handleCustomerCreated(event.data.object as Stripe.Customer);
+        console.log(`👤 Customer created: ${event.data.object.id}`);
+        await upsertStripeCustomer(event.data.object as Stripe.Customer);
         break;
 
       case "customer.updated":
-        await handleCustomerUpdated(event.data.object as Stripe.Customer);
+        console.log(`👤 Customer updated: ${event.data.object.id}`);
+        await upsertStripeCustomer(event.data.object as Stripe.Customer);
         break;
 
       case "customer.deleted":
-        await handleCustomerDeleted(event.data.object as Stripe.Customer);
+        console.log(`👤 Customer deleted: ${event.data.object.id}`);
+        await deleteStripeCustomer(event.data.object as Stripe.Customer);
         break;
 
-      // Invoice/Payment events
+      // Subscription events
+      case "customer.subscription.created":
+        console.log(`🎉 Subscription created: ${event.data.object.id}`);
+        await upsertStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.updated":
+        console.log(`🔄 Subscription updated: ${event.data.object.id}`);
+        await upsertStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.deleted":
+        console.log(`🗑️ Subscription deleted: ${event.data.object.id}`);
+        await deleteStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.trial_will_end":
+        console.log(`⏰ Subscription trial will end: ${event.data.object.id}`);
+        await upsertStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.paused":
+        console.log(`⏸️ Subscription paused: ${event.data.object.id}`);
+        await upsertStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      case "customer.subscription.resumed":
+        console.log(`▶️ Subscription resumed: ${event.data.object.id}`);
+        await upsertStripeSubscription(
+          event.data.object as Stripe.Subscription
+        );
+        break;
+
+      // Invoice events
+      case "invoice.created":
+        console.log(`📄 Invoice created: ${event.data.object.id}`);
+        await upsertStripeInvoice(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.updated":
+        console.log(`📄 Invoice updated: ${event.data.object.id}`);
+        await upsertStripeInvoice(event.data.object as Stripe.Invoice);
+        break;
+
       case "invoice.payment_succeeded":
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        console.log(`💰 Invoice payment succeeded: ${event.data.object.id}`);
+        await upsertStripeInvoice(event.data.object as Stripe.Invoice);
         break;
 
       case "invoice.payment_failed":
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
-        break;
-
-      // Checkout events
-      case "checkout.session.completed":
-        console.log(`Checkout session completed: ${event.data.object.id}`);
-        // The subscription.created event will handle the actual subscription creation
+        console.log(`💸 Invoice payment failed: ${event.data.object.id}`);
+        await upsertStripeInvoice(event.data.object as Stripe.Invoice);
         break;
     }
 

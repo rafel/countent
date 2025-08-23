@@ -17,23 +17,23 @@ export async function createNewCompany(
   user: User
 ): Promise<Company | null> {
   try {
-    const newCompanies = await db
+    const [company] = await db
       .insert(companies)
       .values(companyData)
       .returning();
 
     if (commonSettings.subscriptionModel === "b2b") {
-      await createTeamSubscription(newCompanies[0].companyid, user.email);
+      await createTeamSubscription(company, user);
     }
     const companyUserData: NewCompanyUser = {
       userid: user.userid,
-      companyid: newCompanies[0].companyid,
+      companyid: company.companyid,
       role: "owner",
     };
 
     await db.insert(companyUsers).values(companyUserData);
 
-    return newCompanies[0] || null;
+    return company || null;
   } catch (error) {
     console.error("Error creating company:", error);
     return null;

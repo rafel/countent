@@ -1,5 +1,5 @@
 {
-  "id": "1552c6e6-41ee-48c7-ad63-553ac4596563",
+  "id": "c1498d60-e7f8-4668-ac11-aacd1e285690",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -19,7 +19,8 @@
           "name": "createdat",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "now()"
         },
         "title": {
           "name": "title",
@@ -130,8 +131,8 @@
       },
       "uniqueConstraints": {}
     },
-    "public.messages": {
-      "name": "messages",
+    "public.chatmessages": {
+      "name": "chatmessages",
       "schema": "",
       "columns": {
         "messageid": {
@@ -174,9 +175,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "messages_chatid_chats_chatid_fk": {
-          "name": "messages_chatid_chats_chatid_fk",
-          "tableFrom": "messages",
+        "chatmessages_chatid_chats_chatid_fk": {
+          "name": "chatmessages_chatid_chats_chatid_fk",
+          "tableFrom": "chatmessages",
           "tableTo": "chats",
           "columnsFrom": [
             "chatid"
@@ -191,8 +192,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.streams": {
-      "name": "streams",
+    "public.chatstreams": {
+      "name": "chatstreams",
       "schema": "",
       "columns": {
         "streamid": {
@@ -219,7 +220,7 @@
       "foreignKeys": {
         "streams_chat_fk": {
           "name": "streams_chat_fk",
-          "tableFrom": "streams",
+          "tableFrom": "chatstreams",
           "tableTo": "chats",
           "columnsFrom": [
             "chatid"
@@ -234,8 +235,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.suggestions": {
-      "name": "suggestions",
+    "public.chatsuggestions": {
+      "name": "chatsuggestions",
       "schema": "",
       "columns": {
         "suggestionid": {
@@ -297,9 +298,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "suggestions_userid_users_userid_fk": {
-          "name": "suggestions_userid_users_userid_fk",
-          "tableFrom": "suggestions",
+        "chatsuggestions_userid_users_userid_fk": {
+          "name": "chatsuggestions_userid_users_userid_fk",
+          "tableFrom": "chatsuggestions",
           "tableTo": "users",
           "columnsFrom": [
             "userid"
@@ -312,7 +313,7 @@
         },
         "suggestions_document_fk": {
           "name": "suggestions_document_fk",
-          "tableFrom": "suggestions",
+          "tableFrom": "chatsuggestions",
           "tableTo": "documents",
           "columnsFrom": [
             "documentid",
@@ -327,8 +328,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "suggestions_suggestionid_pk": {
-          "name": "suggestions_suggestionid_pk",
+        "chatsuggestions_suggestionid_pk": {
+          "name": "chatsuggestions_suggestionid_pk",
           "columns": [
             "suggestionid"
           ]
@@ -336,8 +337,8 @@
       },
       "uniqueConstraints": {}
     },
-    "public.votes": {
-      "name": "votes",
+    "public.chatvotes": {
+      "name": "chatvotes",
       "schema": "",
       "columns": {
         "chatid": {
@@ -361,9 +362,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "votes_chatid_chats_chatid_fk": {
-          "name": "votes_chatid_chats_chatid_fk",
-          "tableFrom": "votes",
+        "chatvotes_chatid_chats_chatid_fk": {
+          "name": "chatvotes_chatid_chats_chatid_fk",
+          "tableFrom": "chatvotes",
           "tableTo": "chats",
           "columnsFrom": [
             "chatid"
@@ -374,10 +375,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "votes_messageid_messages_messageid_fk": {
-          "name": "votes_messageid_messages_messageid_fk",
-          "tableFrom": "votes",
-          "tableTo": "messages",
+        "chatvotes_messageid_chatmessages_messageid_fk": {
+          "name": "chatvotes_messageid_chatmessages_messageid_fk",
+          "tableFrom": "chatvotes",
+          "tableTo": "chatmessages",
           "columnsFrom": [
             "messageid"
           ],
@@ -389,8 +390,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "votes_chatid_messageid_pk": {
-          "name": "votes_chatid_messageid_pk",
+        "chatvotes_chatid_messageid_pk": {
+          "name": "chatvotes_chatid_messageid_pk",
           "columns": [
             "chatid",
             "messageid"
@@ -732,6 +733,333 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.stripecustomers": {
+      "name": "stripecustomers",
+      "schema": "",
+      "columns": {
+        "stripecustomerid": {
+          "name": "stripecustomerid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{}'"
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.stripeinvoices": {
+      "name": "stripeinvoices",
+      "schema": "",
+      "columns": {
+        "stripeinvoiceid": {
+          "name": "stripeinvoiceid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "stripecustomerid": {
+          "name": "stripecustomerid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amountdue": {
+          "name": "amountdue",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amountpaid": {
+          "name": "amountpaid",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amountremaining": {
+          "name": "amountremaining",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "billingreason": {
+          "name": "billingreason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hostedinvoiceurl": {
+          "name": "hostedinvoiceurl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stripe_inv_customer_fk": {
+          "name": "stripe_inv_customer_fk",
+          "tableFrom": "stripeinvoices",
+          "tableTo": "stripecustomers",
+          "columnsFrom": [
+            "stripecustomerid"
+          ],
+          "columnsTo": [
+            "stripecustomerid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.stripesubscriptions": {
+      "name": "stripesubscriptions",
+      "schema": "",
+      "columns": {
+        "stripesubscriptionid": {
+          "name": "stripesubscriptionid",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "stripecustomerid": {
+          "name": "stripecustomerid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripecustomer": {
+          "name": "stripecustomer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan": {
+          "name": "plan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelatperiodend": {
+          "name": "cancelatperiodend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currentperiodstart": {
+          "name": "currentperiodstart",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currentperiodend": {
+          "name": "currentperiodend",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endedat": {
+          "name": "endedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cancelat": {
+          "name": "cancelat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "canceledat": {
+          "name": "canceledat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trialstart": {
+          "name": "trialstart",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trialend": {
+          "name": "trialend",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interval": {
+          "name": "interval",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "intervalcount": {
+          "name": "intervalcount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscriptionid": {
+          "name": "subscriptionid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "userid": {
+          "name": "userid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "companyid": {
+          "name": "companyid",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'{}'"
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "createdat": {
+          "name": "createdat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedat": {
+          "name": "updatedat",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stripe_sub_customer_fk": {
+          "name": "stripe_sub_customer_fk",
+          "tableFrom": "stripesubscriptions",
+          "tableTo": "stripecustomers",
+          "columnsFrom": [
+            "stripecustomerid"
+          ],
+          "columnsTo": [
+            "stripecustomerid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.subscriptioncompanies": {
       "name": "subscriptioncompanies",
       "schema": "",
@@ -796,279 +1124,6 @@
       },
       "uniqueConstraints": {}
     },
-    "public.subscriptioninfo": {
-      "name": "subscriptioninfo",
-      "schema": "",
-      "columns": {
-        "subscriptioninfoid": {
-          "name": "subscriptioninfoid",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "subscriptionid": {
-          "name": "subscriptionid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "stripepriceid": {
-          "name": "stripepriceid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripeproductid": {
-          "name": "stripeproductid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "currentperiodstart": {
-          "name": "currentperiodstart",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cancelatperiodend": {
-          "name": "cancelatperiodend",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "canceledat": {
-          "name": "canceledat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "trialstart": {
-          "name": "trialstart",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "trialend": {
-          "name": "trialend",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "amount": {
-          "name": "amount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'usd'"
-        },
-        "interval": {
-          "name": "interval",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "intervalcount": {
-          "name": "intervalcount",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 1
-        },
-        "syncstrategy": {
-          "name": "syncstrategy",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'hybrid'"
-        },
-        "laststripesyncAt": {
-          "name": "laststripesyncAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdat": {
-          "name": "createdat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedat": {
-          "name": "updatedat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "subinfo_sub_fk": {
-          "name": "subinfo_sub_fk",
-          "tableFrom": "subscriptioninfo",
-          "tableTo": "subscriptions",
-          "columnsFrom": [
-            "subscriptionid"
-          ],
-          "columnsTo": [
-            "subscriptionid"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.subscriptionpayers": {
-      "name": "subscriptionpayers",
-      "schema": "",
-      "columns": {
-        "subscriptionpayerid": {
-          "name": "subscriptionpayerid",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "payertype": {
-          "name": "payertype",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userid": {
-          "name": "userid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "companyid": {
-          "name": "companyid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripecustomerid": {
-          "name": "stripecustomerid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "billingemail": {
-          "name": "billingemail",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "billingname": {
-          "name": "billingname",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "vatnumber": {
-          "name": "vatnumber",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdat": {
-          "name": "createdat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedat": {
-          "name": "updatedat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "subscriptionpayers_userid_users_userid_fk": {
-          "name": "subscriptionpayers_userid_users_userid_fk",
-          "tableFrom": "subscriptionpayers",
-          "tableTo": "users",
-          "columnsFrom": [
-            "userid"
-          ],
-          "columnsTo": [
-            "userid"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "subscriptionpayers_companyid_companies_companyid_fk": {
-          "name": "subscriptionpayers_companyid_companies_companyid_fk",
-          "tableFrom": "subscriptionpayers",
-          "tableTo": "companies",
-          "columnsFrom": [
-            "companyid"
-          ],
-          "columnsTo": [
-            "companyid"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "payer_user_fk": {
-          "name": "payer_user_fk",
-          "tableFrom": "subscriptionpayers",
-          "tableTo": "users",
-          "columnsFrom": [
-            "userid"
-          ],
-          "columnsTo": [
-            "userid"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payer_company_fk": {
-          "name": "payer_company_fk",
-          "tableFrom": "subscriptionpayers",
-          "tableTo": "companies",
-          "columnsFrom": [
-            "companyid"
-          ],
-          "columnsTo": [
-            "companyid"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "subscriptionpayers_stripecustomerid_unique": {
-          "name": "subscriptionpayers_stripecustomerid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripecustomerid"
-          ]
-        }
-      }
-    },
     "public.subscriptions": {
       "name": "subscriptions",
       "schema": "",
@@ -1079,12 +1134,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
-        },
-        "subscriptionpayerid": {
-          "name": "subscriptionpayerid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         },
         "plan": {
           "name": "plan",
@@ -1098,27 +1147,15 @@
           "primaryKey": false,
           "notNull": true
         },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "stripesubscriptionid": {
           "name": "stripesubscriptionid",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "currentperiodend": {
-          "name": "currentperiodend",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cancelat": {
-          "name": "cancelat",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "canceledat": {
-          "name": "canceledat",
-          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
@@ -1138,31 +1175,9 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "subs_payer_fk": {
-          "name": "subs_payer_fk",
-          "tableFrom": "subscriptions",
-          "tableTo": "subscriptionpayers",
-          "columnsFrom": [
-            "subscriptionpayerid"
-          ],
-          "columnsTo": [
-            "subscriptionpayerid"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "subscriptions_stripesubscriptionid_unique": {
-          "name": "subscriptions_stripesubscriptionid_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "stripesubscriptionid"
-          ]
-        }
-      }
+      "uniqueConstraints": {}
     },
     "public.subscriptionusers": {
       "name": "subscriptionusers",
