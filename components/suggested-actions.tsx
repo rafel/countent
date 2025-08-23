@@ -11,13 +11,13 @@ interface SuggestedActionsProps {
   chatId: string;
   sendMessage: UseChatHelpers<ChatMessage>['sendMessage'];
   selectedVisibilityType: VisibilityType;
-  companyid: string;
+  workspaceid: string;
 }
 
 function PureSuggestedActions({
   chatId,
   sendMessage,
-  companyid,
+  workspaceid,
 }: SuggestedActionsProps) {
   const suggestedActions = [
     {
@@ -59,7 +59,7 @@ function PureSuggestedActions({
           <Button
             variant="ghost"
             onClick={async () => {
-              window.history.replaceState({}, '', `/d/${companyid}/c/${chatId}`);
+              window.history.replaceState({}, '', `/d/${workspaceid}/c/${chatId}`);
 
               sendMessage({
                 role: 'user',

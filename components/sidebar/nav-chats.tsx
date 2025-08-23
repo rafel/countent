@@ -1,7 +1,6 @@
 "use client";
 
 import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { useState, useTransition, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -49,10 +48,10 @@ import type { Chat } from "@/lib/db/tables/chat";
 import {
   renameChatAction,
   deleteChatAction,
-} from "@/app/d/[companyid]/c/actions";
+} from "@/app/d/[workspaceid]/c/actions";
 import Link from "next/link";
 
-export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
+export function NavChats({ workspaceid }: { workspaceid: string }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const { ttt } = useLanguage();
   const router = useRouter();
@@ -88,7 +87,10 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
   };
 
   // SWR Infinite for pagination
-  const getKey = (pageIndex: number, previousPageData: { chats: Array<Chat>; hasMore: boolean } | null) => {
+  const getKey = (
+    pageIndex: number,
+    previousPageData: { chats: Array<Chat>; hasMore: boolean } | null
+  ) => {
     if (previousPageData && !previousPageData.hasMore) return null; // reached the end
     const limit = 20;
     const offset = pageIndex * limit;
@@ -108,19 +110,38 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
   });
 
   // Flatten all pages into a single array of chats and deduplicate by ID
-  const allChats = pages?.flatMap(page => page.chats) || [];
-  const chats = allChats.filter((chat, index, array) => 
-    array.findIndex(c => c.id === chat.id) === index
+  const allChats = pages?.flatMap((page) => page.chats) || [];
+  const chats = allChats.filter(
+    (chat, index, array) => array.findIndex((c) => c.id === chat.id) === index
   );
   const hasMore = pages?.[pages.length - 1]?.hasMore ?? false;
 
   // Helper function to check if a chat is currently active
   const isActiveChatId = (chatId: string) => {
-    return pathname === `/d/${currentCompanyId}/c/${chatId}`;
+    return pathname === `/d/${workspaceid}/c/${chatId}`;
   };
 
   // Check if we're on the new chat page (no specific chat ID)
-  const isNewChatPage = pathname === `/d/${currentCompanyId}/c`;
+  const isNewChatPage = pathname === `/d/${workspaceid}/c`;
+
+  // Listen for new chat creation events
+  useEffect(() => {
+    const handleNewChat = (event: CustomEvent) => {
+      const { workspaceid: eventWorkspaceId } = event.detail;
+      // Only revalidate if the event is for the current workspace
+      if (eventWorkspaceId === workspaceid) {
+        mutate(); // Revalidate the chat list
+      }
+    };
+
+    window.addEventListener("newChatCreated", handleNewChat as EventListener);
+    return () => {
+      window.removeEventListener(
+        "newChatCreated",
+        handleNewChat as EventListener
+      );
+    };
+  }, [workspaceid, mutate]);
 
   // Infinite scroll effect - listen to the sidebar content scroll
   useEffect(() => {
@@ -140,8 +161,8 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
     // Find the sidebar content element and add scroll listener
     const sidebarContent = document.querySelector('[data-sidebar="content"]');
     if (sidebarContent) {
-      sidebarContent.addEventListener('scroll', handleScroll);
-      return () => sidebarContent.removeEventListener('scroll', handleScroll);
+      sidebarContent.addEventListener("scroll", handleScroll);
+      return () => sidebarContent.removeEventListener("scroll", handleScroll);
     }
   }, [hasMore, isValidating, size, setSize]);
 
@@ -186,7 +207,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
         // Optimistically update the cache
         mutate((pages) => {
           if (!pages) return pages;
-          return pages.map(page => ({
+          return pages.map((page) => ({
             ...page,
             chats: page.chats.map((chat: Chat) =>
               chat.id === renameDialog.chat!.id
@@ -218,7 +239,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
         // Optimistically update the cache
         mutate((pages) => {
           if (!pages) return pages;
-          return pages.map(page => ({
+          return pages.map((page) => ({
             ...page,
             chats: page.chats.filter(
               (chat: Chat) => chat.id !== deleteDialog.chat!.id
@@ -233,7 +254,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
           deleteDialog.chat &&
           window.location.pathname.includes(`/c/${deleteDialog.chat.id}`)
         ) {
-          router.push(`/d/${currentCompanyId}/c`);
+          router.push(`/d/${workspaceid}/c`);
         }
       } else {
         console.error("Failed to delete chat:", result.error);
@@ -244,8 +265,8 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>{ttt("Conversations")}</SidebarGroupLabel>
-      <SidebarMenuItem>
-        <Link href={`/d/${currentCompanyId}/c`}>
+      <SidebarMenu>
+        <SidebarMenuItem>
           <SidebarMenuButton
             className="text-sidebar-foreground/70 cursor-pointer"
             isActive={isNewChatPage}
@@ -253,12 +274,15 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
               handleMobileNavigation();
             }}
           >
-            <Plus className="text-sidebar-foreground/70" />
-            <span>{ttt("New Chat")}</span>
+            <Link
+              href={`/d/${workspaceid}/c`}
+              className="flex items-center gap-2"
+            >
+              <Plus className="text-sidebar-foreground/70" />
+              <span>{ttt("New Chat")}</span>
+            </Link>
           </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
-      <SidebarMenu>
+        </SidebarMenuItem>
         {isLoading ? (
           // Loading skeleton
           Array.from({ length: 3 }).map((_, index) => (
@@ -281,7 +305,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
           // Render chats from database
           chats.map((chat) => (
             <SidebarMenuItem key={chat.id}>
-              <Link href={`/d/${currentCompanyId}/c/${chat.id}`}>
+              <Link href={`/d/${workspaceid}/c/${chat.id}`}>
                 <SidebarMenuButton
                   isActive={isActiveChatId(chat.id)}
                   className="cursor-pointer"
@@ -331,7 +355,7 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
             </SidebarMenuItem>
           ))
         )}
-        
+
         {/* Loading indicator for infinite scroll */}
         {isValidating && chats.length > 0 && (
           <SidebarMenuItem>
@@ -340,11 +364,11 @@ export function NavChats({ currentCompanyId }: { currentCompanyId: string }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         )}
-        
+
         {/* End of list indicator */}
         {!hasMore && chats.length > 0 && (
           <SidebarMenuItem>
-            <div className="text-xs text-muted-foreground text-center py-2">
+            <div className="text-xs text-muted-foreground/70 text-left py-2 pl-2">
               End of conversations
             </div>
           </SidebarMenuItem>

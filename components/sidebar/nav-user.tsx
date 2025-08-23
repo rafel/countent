@@ -30,25 +30,23 @@ import { User } from "@/lib/db/tables/user";
 import { useLanguage } from "@/hooks/use-language";
 import { commonSettings } from "@/content/common";
 import { showPricingDialog } from "@/hooks/use-subscription-dialog";
-import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
 
 export function NavUser({
   user,
   onOpenSettings,
-  companyId,
+  workspaceid,
 }: {
   user: User;
   onOpenSettings: (open: boolean) => void;
-  companyId?: string;
+  workspaceid?: string;
 }) {
   const { isMobile } = useSidebar();
   const { ttt } = useLanguage();
 
   const isB2C = commonSettings.subscriptionModel === "b2c";
 
-  const { subscriptionAccess } = useSubscriptionAccess();
+  const isFreePlan = false;
 
-  const isFreePlan = subscriptionAccess?.plan === "free" || !subscriptionAccess;
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -100,7 +98,7 @@ export function NavUser({
             {isB2C && isFreePlan && (
               <DropdownMenuGroup>
                 <DropdownMenuItem
-                  onClick={() => showPricingDialog(user.userid, companyId)}
+                  onClick={() => showPricingDialog(user.userid, workspaceid)}
                 >
                   <Sparkles />
                   {ttt("Upgrade to Pro")}

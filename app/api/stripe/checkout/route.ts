@@ -3,19 +3,13 @@ import Stripe from "stripe";
 import { auth } from "@/lib/user";
 import { ChatSDKError } from "@/lib/errors";
 
-import { commonSettings } from "@/content/common";
-import { getCurrentSubscription } from "@/lib/db/queries/subscription";
-import {
-  getStripeSubscriptionByStripeId,
-  upsertStripeCustomer,
-} from "@/lib/db/queries/stripe";
-import { NewStripeMetadata } from "@/lib/db/tables/stripe";
+import { StripeMetadata } from "@/lib/db/tables/stripe";
+import { getWorkspaceStripeSubscription } from "@/lib/db/queries/stripe";
 
 export interface CheckoutSessionRequest {
-  lookup_key: string;
-  success_path: string;
-  cancel_path: string;
-  company_id?: string;
+  lookupkey: string;
+  path: string;
+  workspaceid: string;
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -31,57 +25,48 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CheckoutSessionRequest = await request.json();
-    const { lookup_key, success_path, cancel_path, company_id } = body;
+    const { lookupkey, path, workspaceid } = body;
 
-    if (!lookup_key) {
+    if (!lookupkey) {
       console.error("No lookup key found");
       return new ChatSDKError(
         "bad_request:stripe",
         "No lookup key provided"
       ).toResponse();
     }
-
-    const subscription = await getCurrentSubscription(
-      session.user.id,
-      company_id!
-    );
-
-    if (!subscription) {
+    if (!workspaceid) {
+      console.error("No workspace id found");
       return new ChatSDKError(
         "bad_request:stripe",
-        "No subscription found"
+        "No workspace id provided"
       ).toResponse();
     }
-    let stripecustomerid;
-    let email = session.user.email;
-
-    if (subscription.stripesubscriptionid) {
-      const stripeSubscription = await getStripeSubscriptionByStripeId(
-        subscription.stripesubscriptionid
-      );
-      stripecustomerid = stripeSubscription?.customer.stripecustomerid;
-      if (stripeSubscription?.customer.email) {
-        email = stripeSubscription?.customer.email;
-      }
+    if (!path) {
+      console.error("No path found");
+      return new ChatSDKError(
+        "bad_request:stripe",
+        "No path provided"
+      ).toResponse();
     }
 
-    const stripeMetadata: NewStripeMetadata = {
-      user_id: session.user.id,
-      model: commonSettings.subscriptionModel,
-      company_id: company_id || "",
-      subscriptionid: subscription.subscriptionid,
+    const stripeMetadata: StripeMetadata = {
+      workspaceid: workspaceid,
     };
+
+    const subscription = await getWorkspaceStripeSubscription(workspaceid);
+
+    let stripecustomerid = subscription?.stripecustomerid;
 
     if (!stripecustomerid) {
       try {
         const customers = await stripe.customers.list({
-          email,
+          email: session.user.email,
           limit: 1,
         });
         let customer = customers.data.length > 0 ? customers.data[0] : null;
         if (!customer) {
           customer = await stripe.customers.create({
-            email: email,
+            email: session.user.email,
             name: session.user.name || undefined,
             metadata: stripeMetadata,
           });
@@ -101,12 +86,12 @@ export async function POST(request: NextRequest) {
 
     // Get the price using the lookup key
     const prices = await stripe.prices.list({
-      lookup_keys: [lookup_key],
+      lookup_keys: [lookupkey],
       expand: ["data.product"],
     });
 
     if (prices.data.length === 0) {
-      console.error("No price found for lookup key:", lookup_key);
+      console.error("No price found for lookup key:", lookupkey);
       return new ChatSDKError(
         "bad_request:stripe",
         "No price found"
@@ -126,8 +111,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `${baseUrl}${success_path}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}${cancel_path}`,
+      success_url: `${baseUrl}${path}?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}${path}?cancel=true`,
       metadata: stripeMetadata,
       subscription_data: {
         metadata: stripeMetadata,

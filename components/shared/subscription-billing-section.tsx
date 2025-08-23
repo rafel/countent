@@ -13,51 +13,51 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import PricingDialog from "@/components/pricingdialog/pricingdialog";
-import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
 import { redirectNewTab } from "@/lib/utils";
 import { toast } from "@/components/toast";
+import { PortalSessionRequest } from "@/app/api/stripe/portal/route";
+import { useWorkspace } from "@/hooks/use-workspace";
 
 interface SubscriptionBillingSectionProps {
-  // For B2B: companyId is required, userId is the current user
-  // For B2C: userId is required, companyId is optional
-  companyId?: string;
-  isCompanyContext?: boolean; // true = company settings, false = user settings
+  workspaceid: string;
+  isWorkspaceContext?: boolean; // true = workspace settings, false = user settings
 }
 
 export function SubscriptionBillingSection({
-  companyId,
-  isCompanyContext = false,
+  workspaceid,
+  isWorkspaceContext = false,
 }: SubscriptionBillingSectionProps) {
   const { ttt } = useLanguage();
   const [showPricingDialog, setShowPricingDialog] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
 
-  const { subscriptionAccess, isLoading, refetch } = useSubscriptionAccess();
+  const { workspace, isLoading, refetch } = useWorkspace();
 
-  const currentPlan = subscriptionAccess?.plan || "free";
+  const currentPlan = workspace?.stripeSubscription?.plan || "free";
   const isFreePlan = currentPlan === "free";
-  const hasBillingPage = subscriptionAccess?.hasBillingPage || false;
+  const hasBillingPage = workspace?.stripeSubscription?.plan;
 
   const handleBillingHistory = async () => {
     try {
       setIsLoadingPortal(true);
 
       // Determine the return path based on context
-      const returnPath = isCompanyContext
-        ? `/d/${companyId}`
-        : `/d/${companyId}`;
+      const returnPath = isWorkspaceContext
+        ? `/d/${workspaceid}`
+        : `/d/${workspaceid}`;
 
       try {
+        const body : PortalSessionRequest = {
+          path: returnPath,
+          workspaceid: workspaceid,
+        };
         const response = await fetch("/api/stripe/portal", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({
-            return_path: returnPath,
-            company_id: companyId,
-          }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -105,8 +105,8 @@ export function SubscriptionBillingSection({
               <CardTitle className="text-base">{ttt("Current Plan")}</CardTitle>
             </div>
             <CardDescription>
-              {isCompanyContext
-                ? ttt("Your company's current subscription plan")
+              {isWorkspaceContext
+                ? ttt("Your workspace's current subscription plan")
                 : ttt("Your current subscription plan")}
             </CardDescription>
           </CardHeader>
@@ -152,13 +152,13 @@ export function SubscriptionBillingSection({
                   : ttt("Manage Subscription")}
               </Button>
               {hasBillingPage && (
-              <Button
-                variant="outline"
-                className="flex-1 cursor-pointer"
-                onClick={handleBillingHistory}
-                disabled={isLoadingPortal}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
+                <Button
+                  variant="outline"
+                  className="flex-1 cursor-pointer"
+                  onClick={handleBillingHistory}
+                  disabled={isLoadingPortal}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
                   {isLoadingPortal ? ttt("Loading...") : ttt("Billing History")}
                 </Button>
               )}
@@ -211,7 +211,7 @@ export function SubscriptionBillingSection({
       <PricingDialog
         open={showPricingDialog}
         onOpenChange={setShowPricingDialog}
-        companyId={companyId || ""}
+        workspaceid={workspaceid}
         limitReached={false}
       />
     </>

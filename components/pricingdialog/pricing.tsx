@@ -21,18 +21,19 @@ import {
   type StripePriceLookupKey,
 } from "@/content/common";
 import { toast } from "@/components/toast";
-import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { CheckoutSessionRequest } from "@/app/api/stripe/checkout/route";
 
 const Pricing = ({
   showFreePlan = false,
-  companyId,
+  workspaceid,
 }: {
   showFreePlan?: boolean;
-  companyId: string;
+  workspaceid: string;
 }) => {
   const { ttt } = useLanguage();
   const [isLoading, setIsLoading] = useState<string | null>(null);
-  const { refetch } = useSubscriptionAccess();
+  const { refetch } = useWorkspace();
   const handleSubscribe = async (
     lookupKey: StripePriceLookupKey,
     planId: string
@@ -43,19 +44,18 @@ const Pricing = ({
       setIsLoading(planId);
 
       try {
+        const data: CheckoutSessionRequest = {
+          lookupkey: lookupKey,
+          path: `/d/${workspaceid}/subscription`,
+          workspaceid: workspaceid,
+        };
         const response = await fetch("/api/stripe/checkout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({
-            lookup_key: lookupKey,
-            success_path: `/d/${companyId}/subscription/success`,
-            cancel_path: `/d/${companyId}/subscription/cancel`,
-            return_path: `/d/${companyId}`,
-            company_id: companyId,
-          }),
+          body: JSON.stringify(data),
         });
 
         if (!response.ok) {

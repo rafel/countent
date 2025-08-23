@@ -10,14 +10,15 @@ const LANGUAGE_FILES = {
 
 // Function to extract translation keys from files
 async function extractTranslationKeys() {
-  // Use the glob promise API
-  const files = await globModule.glob("{app,components}/**/*.{ts,tsx}", {
-    ignore: ["app/content/**/*", "content/**/*"],
-  });
+  // Use the glob promise API with separate patterns
+  const appFiles = await globModule.glob("app/**/*.ts") || [];
+  const appTsxFiles = await globModule.glob("app/**/*.tsx") || [];
+  const componentFiles = await globModule.glob("components/**/*.ts") || [];
+  const componentTsxFiles = await globModule.glob("components/**/*.tsx") || [];
+  const files = [...appFiles, ...appTsxFiles, ...componentFiles, ...componentTsxFiles];
 
-  // Enhanced regex to capture ttt() calls with double quotes, handling escaped quotes, apostrophes, and multi-line
-  const translationKeyRegex =
-    /ttt\([\s\S]*?"([^"\\]*(?:\\.[^"\\]*)*)"[\s\S]*?\)/g;
+  // Simplified regex to capture ttt() calls with double quotes
+  const translationKeyRegex = /ttt\(\s*"([^"]+)"\s*\)/g;
 
   const keys = new Set<string>();
 
@@ -26,7 +27,7 @@ async function extractTranslationKeys() {
     let match;
 
     while ((match = translationKeyRegex.exec(content)) !== null) {
-      const key = match[1].replace(/\\"/g, '"'); // Unescape double quotes
+      const key = match[1];
       if (key) {
         keys.add(key);
       }

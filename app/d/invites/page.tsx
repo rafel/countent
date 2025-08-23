@@ -1,7 +1,7 @@
 import { getUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 import { InviteAcceptance } from "./components/invite-acceptance";
-import { getPendingInvitesForUser } from "./functions/actions";
+import { getPendingInvitesForUser } from "./actions";
 
 export default async function InvitesPage() {
   const user = await getUser();

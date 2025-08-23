@@ -32,13 +32,13 @@ const PureChatItem = ({
   isActive,
   onDelete,
   setOpenMobile,
-  companyid,
+  workspaceid,
 }: {
   chat: Chat;
   isActive: boolean;
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
-  companyid: string;
+  workspaceid: string;
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.id,
@@ -48,7 +48,7 @@ const PureChatItem = ({
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/d/${companyid}/c`} onClick={() => setOpenMobile(false)}>
+        <Link href={`/d/${workspaceid}/c`} onClick={() => setOpenMobile(false)}>
           <span>{chat.title}</span>
         </Link>
       </SidebarMenuButton>

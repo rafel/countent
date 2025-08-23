@@ -11,7 +11,7 @@ export type SubscriptionDialogTarget =
 
 export interface SubscriptionDialogOptions {
   userId: string;
-  companyId?: string;
+  workspaceId?: string;
   target?: SubscriptionDialogTarget;
   onClose?: () => void;
 }
@@ -23,7 +23,7 @@ export interface SubscriptionDialogOptions {
 export class SubscriptionDialogManager {
   private static instance: SubscriptionDialogManager;
   private currentDialog: {
-    type: "user" | "company";
+    type: "user" | "workspace";
     target: SubscriptionDialogTarget;
     options: SubscriptionDialogOptions;
   } | null = null;
@@ -55,10 +55,10 @@ export class SubscriptionDialogManager {
    * Show the appropriate subscription dialog
    */
   showSubscriptionDialog(options: SubscriptionDialogOptions) {
-    const { userId, companyId, target = "billing" } = options;
+    const { userId, workspaceId, target = "billing" } = options;
 
     // Determine which dialog to show based on subscription model
-    const dialogType = this.determineDialogType(companyId);
+    const dialogType = this.determineDialogType(workspaceId);
 
     this.currentDialog = {
       type: dialogType,
@@ -89,12 +89,12 @@ export class SubscriptionDialogManager {
   /**
    * Determine which dialog to show based on business rules
    */
-  private determineDialogType(companyId?: string): "user" | "company" {
+  private determineDialogType(workspaceId?: string): "user" | "workspace" {
     const subscriptionModel = commonSettings.subscriptionModel;
 
     if (subscriptionModel === "b2b") {
-      // B2B: Always show in company dialog (company pays)
-      return "company";
+      // B2B: Always show in workspace dialog (workspace pays)
+      return "workspace";
     } else {
       // B2C: Show in user dialog (user pays)
       return "user";
@@ -111,37 +111,40 @@ export const subscriptionDialogManager =
  */
 
 // Show subscription management (billing)
-export function showSubscriptionManagement(userId: string, companyId?: string) {
+export function showSubscriptionManagement(
+  userId: string,
+  workspaceId?: string
+) {
   subscriptionDialogManager.showSubscriptionDialog({
     userId,
-    companyId,
+    workspaceId,
     target: "billing",
   });
 }
 
 // Show usage and limits
-export function showUsageDialog(userId: string, companyId?: string) {
+export function showUsageDialog(userId: string, workspaceId?: string) {
   subscriptionDialogManager.showSubscriptionDialog({
     userId,
-    companyId,
+    workspaceId,
     target: "usage",
   });
 }
 
 // Show pricing plans
-export function showPricingDialog(userId: string, companyId?: string) {
+export function showPricingDialog(userId: string, workspaceId?: string) {
   subscriptionDialogManager.showSubscriptionDialog({
     userId,
-    companyId,
+    workspaceId,
     target: "plans",
   });
 }
 
 // Show billing history
-export function showBillingHistory(userId: string, companyId?: string) {
+export function showBillingHistory(userId: string, workspaceId?: string) {
   subscriptionDialogManager.showSubscriptionDialog({
     userId,
-    companyId,
+    workspaceId,
     target: "history",
   });
 }

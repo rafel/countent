@@ -25,28 +25,28 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { CompanySettingsDialog } from "@/components/companysettingsdialog/companysettingsdialog";
+import { WorkspaceSettingsDialog } from "@/components/workspacesettingsdialog/workspacesettingsdialog";
 import { useLanguage } from "@/hooks/use-language";
-import { Company } from "@/lib/db/tables/company";
 import { commonSettings } from "@/content/common";
 import { showPricingDialog } from "@/hooks/use-subscription-dialog";
-import { useSubscriptionAccess } from "@/hooks/use-subscription-access";
+import { Workspace } from "@/lib/db/tables/workspace";
+import Link from "next/link";
+import { useWorkspace } from "@/hooks/use-workspace";
 
 export function NavMain({
-  currentCompany,
+  currentWorkspace,
   userId,
 }: {
-  currentCompany: Company;
+  currentWorkspace: Workspace;
   userId: string;
 }) {
+  const { workspace } = useWorkspace();
   const [companySettingsOpen, setCompanySettingsOpen] = useState(false);
   const { ttt } = useLanguage();
 
   const isB2B = commonSettings.subscriptionModel === "b2b";
 
-  const { subscriptionAccess } = useSubscriptionAccess();
-
-  const isFreePlan = subscriptionAccess?.plan === "free" || !subscriptionAccess;
+  const isFreePlan = !workspace?.stripeSubscription?.plan;
 
   const data = {
     navMain: [
@@ -95,7 +95,7 @@ export function NavMain({
         ],
       },
       {
-        title: ttt("Company Settings"),
+        title: ttt("Settings"),
         url: "#",
         icon: Settings,
         isCompanySettings: true,
@@ -122,7 +122,7 @@ export function NavMain({
     if (item.isCompanySettings) {
       setCompanySettingsOpen(true);
     } else if (item.isUpgrade) {
-      showPricingDialog(userId, currentCompany.companyid);
+      showPricingDialog(userId, currentWorkspace.workspaceid);
     } else {
       // Handle regular navigation
       window.location.href = item.url;
@@ -132,7 +132,7 @@ export function NavMain({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel>{ttt("Platform")}</SidebarGroupLabel>
+        <SidebarGroupLabel>{ttt("Workspace")}</SidebarGroupLabel>
         <SidebarMenu>
           {data.navMain.map((item) => {
             // If it's a company settings or upgrade item, render as direct button
@@ -141,6 +141,7 @@ export function NavMain({
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     tooltip={item.title}
+                    className={"cursor-pointer"}
                     onClick={() => handleItemClick(item)}
                   >
                     {item.icon && <item.icon />}
@@ -171,9 +172,9 @@ export function NavMain({
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild>
-                            <a href={subItem.url}>
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
@@ -187,10 +188,10 @@ export function NavMain({
       </SidebarGroup>
 
       {/* Company Settings Dialog */}
-      <CompanySettingsDialog
+      <WorkspaceSettingsDialog
         open={companySettingsOpen}
         onOpenChange={setCompanySettingsOpen}
-        company={currentCompany}
+        workspace={currentWorkspace}
       />
     </>
   );

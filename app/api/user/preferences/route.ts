@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { type UserPreferences, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/user";
-import { LANGUAGES } from "@/contexts/languageprovider";
+import { LANGUAGE_IDS } from "@/content/common";
 
 export async function GET() {
   try {
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (language && !LANGUAGES.map((l) => l.id).includes(language)) {
+    if (language && !LANGUAGE_IDS.includes(language)) {
       return NextResponse.json(
         { error: "Invalid language value" },
         { status: 400 }

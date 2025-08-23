@@ -10,8 +10,7 @@ import {
 import { eq, lt, gt, and } from "drizzle-orm";
 import { randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { createPersonalSubscription } from "@/lib/db/queries/subscription";
-import { commonSettings } from "@/content/common";
+import { createWorkspace } from "./workspace";
 
 export async function createNewUser(userData: NewUser): Promise<User | null> {
   try {
@@ -20,10 +19,7 @@ export async function createNewUser(userData: NewUser): Promise<User | null> {
     }
 
     const [user] = await db.insert(users).values(userData).returning();
-
-    if (commonSettings.subscriptionModel === "b2c") {
-      await createPersonalSubscription(user);
-    }
+    await createWorkspace("My Workspace", "personal", user.userid);
 
     return user || null;
   } catch (error) {
@@ -44,6 +40,16 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   } catch (error) {
     console.error("Error getting user by email:", error);
     return null;
+  }
+}
+
+export async function deleteUser(userid: string): Promise<boolean> {
+  try {
+    await db.delete(users).where(eq(users.userid, userid));
+    return true;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return false;
   }
 }
 

@@ -13,6 +13,18 @@ export const commonSettings = {
   defaultSubscriptionPlan: "free" as SubscriptionPlans,
 };
 
+// Define available languages
+export const LANGUAGES = [
+  { id: "en", title: "English" },
+  { id: "sv", title: "Svenska" },
+] as const;
+
+// Extract language IDs for validation
+export const LANGUAGE_IDS = LANGUAGES.map((l) => l.id);
+
+// Type for language ID
+export type LanguageId = (typeof LANGUAGES)[number]["id"];
+
 export type SubscriptionModels = "b2c" | "b2b";
 
 export type SubscriptionPlans = "free" | "pro" | "ultra" | "enterprise";

@@ -42,7 +42,7 @@ function PureMultimodalInput({
   sendMessage,
   className,
   selectedVisibilityType,
-  companyid,
+  workspaceid,
 }: {
   chatId: string;
   input: string;
@@ -56,7 +56,7 @@ function PureMultimodalInput({
   sendMessage: UseChatHelpers<ChatMessage>['sendMessage'];
   className?: string;
   selectedVisibilityType: VisibilityType;
-  companyid: string;
+  workspaceid: string;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -111,7 +111,7 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/d/${companyid}/c/${chatId}`);
+    window.history.replaceState({}, '', `/d/${workspaceid}/c/${chatId}`);
 
     sendMessage({
       role: 'user',
@@ -145,7 +145,8 @@ function PureMultimodalInput({
     setAttachments,
     setLocalStorageInput,
     width,
-    companyid,
+    workspaceid,
+    chatId,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -243,7 +244,7 @@ function PureMultimodalInput({
             sendMessage={sendMessage}
             chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
-            companyid={companyid}
+            workspaceid={workspaceid}
           />
         )}
 

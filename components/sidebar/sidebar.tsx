@@ -5,7 +5,7 @@ import * as React from "react";
 import { NavMain } from "@/components/sidebar/nav-main";
 
 import { NavUser } from "@/components/sidebar/nav-user";
-import { CompanySwitcher } from "@/components/sidebar/company-switcher";
+import { WorkspaceSwitcher } from "@/components/sidebar/workspace-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -15,54 +15,47 @@ import {
 } from "@/components/ui/sidebar";
 import { User } from "@/lib/db/tables/user";
 import { UserSettingsDialog } from "../usersettingsdialog/usersettingsdialog";
-import { Company } from "@/lib/db/tables/company";
 import { NavChats } from "./nav-chats";
+import { Workspace } from "@/lib/db/tables/workspace";
 
 export function AppSidebar({
   user,
-  currentCompanyId,
-  companies = [],
+  workspaces,
+  workspaceid,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: User;
-  currentCompanyId?: string;
-  companies?: Company[];
+  workspaces: Workspace[];
+  workspaceid: string;
 }) {
   const [openSettings, setOpenSettings] = React.useState(false);
 
-  const currentCompany = companies.find(
-    (c) => c.companyid === currentCompanyId
+  const currentWorkspace = workspaces.find(
+    (w) => w.workspaceid === workspaceid
   );
 
-  if (!currentCompanyId) {
+  if (!workspaceid) {
     return null;
   }
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <CompanySwitcher
-          companies={companies}
-          currentCompanyId={currentCompanyId}
-        />
+        <WorkspaceSwitcher workspaces={workspaces} workspaceid={workspaceid} />
       </SidebarHeader>
       <SidebarContent>
-        {currentCompany && (
-          <NavMain currentCompany={currentCompany} userId={user.userid} />
+        {currentWorkspace && (
+          <NavMain currentWorkspace={currentWorkspace} userId={user.userid} />
         )}
-        <NavChats currentCompanyId={currentCompanyId} />
+        <NavChats workspaceid={workspaceid} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={user}
-          onOpenSettings={setOpenSettings}
-          companyId={currentCompanyId}
-        />
+        <NavUser user={user} onOpenSettings={setOpenSettings} />
       </SidebarFooter>
       <UserSettingsDialog
         open={openSettings}
         onOpenChange={setOpenSettings}
-        companyId={currentCompanyId}
+        workspaceid={workspaceid}
       />
       <SidebarRail />
     </Sidebar>

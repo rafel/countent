@@ -5,18 +5,14 @@ import {
   NewStripeSubscription,
   stripecustomers,
   stripeinvoices,
-  StripeSubscriptionWithCustomer,
   stripesubscriptions,
   StripeCustomer,
   StripeMetadata,
+  StripeSubscription,
 } from "@/lib/db/tables/stripe";
 import { and, eq } from "drizzle-orm";
 import Stripe from "stripe";
-import {
-  getCurrentSubscription,
-  getSubscriptionById,
-  updateSubscription,
-} from "./subscription";
+import { checkUserWorkspaceAccess } from "./workspace";
 
 export const upsertStripeCustomer = async (customer: Stripe.Customer) => {
   const newCustomer: NewStripeCustomer = {
@@ -47,36 +43,6 @@ export const deleteStripeCustomer = async (customer: Stripe.Customer) => {
 export const upsertStripeSubscription = async (
   subscription: Stripe.Subscription
 ) => {
-  const stripeCustomerId = subscription.customer as string;
-  let stripeCustomer = null;
-  try {
-    stripeCustomer = await getStripeCustomerByStripeId(stripeCustomerId);
-  } catch (error) {
-    console.error("Failed to fetch customer from Stripe:", error);
-  }
-
-  // If customer doesn't exist in our database, fetch from Stripe and create it
-  if (!stripeCustomer) {
-    console.log(
-      `Customer ${stripeCustomerId} not found in database, fetching from Stripe`
-    );
-    try {
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2025-07-30.basil",
-      });
-      const customer = await stripe.customers.retrieve(stripeCustomerId, {
-        expand: ["metadata"],
-      });
-      if (customer && !customer.deleted) {
-        await upsertStripeCustomer(customer as Stripe.Customer);
-        stripeCustomer = await getStripeCustomerByStripeId(stripeCustomerId);
-        console.log("Created customer in database:", stripeCustomer);
-      }
-    } catch (error) {
-      console.error("Failed to fetch customer from Stripe:", error);
-    }
-  }
-
   const currentPeriodStart =
     "current_period_start" in subscription
       ? (subscription.current_period_start as number)
@@ -85,35 +51,15 @@ export const upsertStripeSubscription = async (
     "current_period_end" in subscription
       ? (subscription.current_period_end as number)
       : null;
-  // Extract pricing information from the subscription
   const priceData = subscription.items.data[0]?.price;
 
-  // If we still don't have a customer, we cannot proceed due to foreign key constraint
-  if (!stripeCustomer) {
-    console.error(
-      `Cannot process subscription ${subscription.id}: customer ${stripeCustomerId} not found and could not be created`
-    );
-  }
-
-  // Build subscription object, conditionally including stripecustomerid to avoid FK constraint issues
-  const baseSubscription: NewStripeSubscription = {
+  const newSubscription: NewStripeSubscription = {
     stripesubscriptionid: subscription.id,
-    stripecustomer: subscription.customer as string,
+    stripecustomerid: subscription.customer as string,
     status: subscription.status || null,
     plan: subscription.items.data[0]?.plan?.id || null,
     cancelatperiodend: subscription.cancel_at_period_end || false,
-    userid:
-      (subscription.metadata?.user_id as string) ||
-      stripeCustomer?.metadata?.user_id ||
-      "",
-    companyid:
-      (subscription.metadata?.company_id as string) ||
-      stripeCustomer?.metadata?.company_id ||
-      "",
-    subscriptionid:
-      (subscription.metadata?.subscriptionid as string) ||
-      stripeCustomer?.metadata?.subscriptionid ||
-      "",
+    workspaceid: subscription.metadata?.workspaceid || "",
     currentperiodstart: currentPeriodStart
       ? new Date(currentPeriodStart * 1000)
       : null,
@@ -143,14 +89,6 @@ export const upsertStripeSubscription = async (
     metadata: (subscription.metadata as StripeMetadata) || {},
   };
 
-  // Only add stripecustomerid if we have a valid customer to avoid FK constraint violation
-  const newSubscription: NewStripeSubscription =
-    stripeCustomer?.stripecustomerid
-      ? {
-          ...baseSubscription,
-          stripecustomerid: stripeCustomer.stripecustomerid,
-        }
-      : baseSubscription;
   try {
     await db
       .insert(stripesubscriptions)
@@ -162,53 +100,6 @@ export const upsertStripeSubscription = async (
       .returning();
   } catch (error) {
     console.error("Failed to insert subscription:", error);
-  }
-
-  let userId = subscription.metadata?.user_id as string;
-  let companyId = subscription.metadata?.company_id as string;
-  let subscriptionId = subscription.metadata?.subscriptionid as string;
-
-  let currentSubscription = null;
-  if (subscriptionId && subscriptionId.trim() !== "") {
-    currentSubscription = await getSubscriptionById(subscriptionId);
-  }
-  if (!currentSubscription) {
-    console.log("No current subscription found by id", subscriptionId);
-    currentSubscription = await getCurrentSubscription(userId, companyId);
-  }
-  if (!currentSubscription) {
-    console.log(
-      "No current subscription found by userid and companyid",
-      userId,
-      companyId
-    );
-    if (stripeCustomer) {
-      const metadata = stripeCustomer.metadata as StripeMetadata;
-      console.log("trying customer data", metadata);
-      userId = metadata.user_id || "";
-      companyId = metadata.company_id || "";
-      currentSubscription = await getCurrentSubscription(
-        userId,
-        companyId,
-        true
-      );
-    }
-  }
-  if (currentSubscription) {
-    try {
-      const updateData = {
-        ...currentSubscription,
-        stripesubscriptionid: subscription.id,
-      };
-      await updateSubscription(updateData);
-    } catch (error) {
-      console.error("Failed to update subscription1:", error);
-    }
-  } else {
-    console.log(
-      "Updated stripesubscription but no current subscription found",
-      subscription.id
-    );
   }
 
   return subscription;
@@ -259,44 +150,51 @@ export const deleteStripeInvoice = async (invoice: Stripe.Invoice) => {
     );
 };
 
-export const getStripeSubscriptionByStripeId = async (
-  stripeSubscriptionId: string
-): Promise<StripeSubscriptionWithCustomer | null> => {
-  const result = await db
-    .select()
-    .from(stripesubscriptions)
-    .innerJoin(
-      stripecustomers,
-      eq(stripesubscriptions.stripecustomerid, stripecustomers.stripecustomerid)
-    )
-    .where(
-      and(
-        eq(stripesubscriptions.stripesubscriptionid, stripeSubscriptionId),
-        eq(stripesubscriptions.active, true),
-        eq(stripecustomers.active, true)
-      )
-    )
-    .limit(1);
-
-  if (result.length === 0) {
+export const getUserWorkspaceStripeSubscription = async (
+  userId: string,
+  workspaceId: string
+): Promise<StripeSubscription | null> => {
+  if (!(await checkUserWorkspaceAccess(userId, workspaceId))) {
     return null;
   }
 
-  // Transform the joined result into our typed structure
-  return {
-    subscription: result[0].stripesubscriptions,
-    customer: result[0].stripecustomers,
-  };
+  return getWorkspaceStripeSubscription(workspaceId);
 };
 
-export const getStripeCustomerByStripeId = async (
-  stripeCustomerId: string
-): Promise<StripeCustomer | null> => {
-  const [result] = await db
+export const getWorkspaceStripeSubscription = async (
+  workspaceid: string
+): Promise<StripeSubscription | null> => {
+  const [subscription] = await db
     .select()
-    .from(stripecustomers)
-    .where(eq(stripecustomers.stripecustomerid, stripeCustomerId))
-    .limit(1);
+    .from(stripesubscriptions)
+    .where(
+      and(
+        eq(stripesubscriptions.workspaceid, workspaceid),
+        eq(stripesubscriptions.active, true)
+      )
+    );
+  return subscription || null;
+};
 
-  return result;
+export const getWorkspaceStripeCustomer = async (
+  stripecustomerid: string
+): Promise<StripeCustomer | null> => {
+  const [customer] = await db
+    .select({
+      stripecustomerid: stripecustomers.stripecustomerid,
+      name: stripecustomers.name,
+      email: stripecustomers.email,
+      metadata: stripecustomers.metadata,
+      active: stripecustomers.active,
+      createdat: stripecustomers.createdat,
+      updatedat: stripecustomers.updatedat,
+    })
+    .from(stripecustomers)
+    .where(
+      and(
+        eq(stripecustomers.stripecustomerid, stripecustomerid),
+        eq(stripecustomers.active, true)
+      )
+    );
+  return customer || null;
 };

@@ -19,7 +19,7 @@ import {
   saveMessages,
 } from "@/lib/db/queries/chat";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
-import { generateTitleFromUserMessage } from "@/app/d/[companyid]/c/actions";
+import { generateTitleFromUserMessage } from "@/app/d/[workspaceid]/c/actions";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";

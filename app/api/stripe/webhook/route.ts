@@ -7,7 +7,6 @@ import {
   upsertStripeSubscription,
   deleteStripeSubscription,
   upsertStripeInvoice,
-  deleteStripeInvoice,
 } from "@/lib/db/queries/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

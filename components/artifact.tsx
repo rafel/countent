@@ -67,7 +67,7 @@ function PureArtifact({
   votes,
   isReadonly,
   selectedVisibilityType,
-  companyid,
+  workspaceid,
 }: {
   chatId: string;
   input: string;
@@ -83,7 +83,7 @@ function PureArtifact({
   regenerate: UseChatHelpers<ChatMessage>['regenerate'];
   isReadonly: boolean;
   selectedVisibilityType: VisibilityType;
-  companyid: string;
+  workspaceid: string;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
 
@@ -338,7 +338,7 @@ function PureArtifact({
                     className="bg-background dark:bg-muted"
                     setMessages={setMessages}
                     selectedVisibilityType={selectedVisibilityType}
-                    companyid={companyid}
+                    workspaceid={workspaceid}
                   />
                 </form>
               </div>

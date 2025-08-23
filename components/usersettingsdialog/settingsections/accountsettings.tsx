@@ -19,7 +19,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { LogOut, Trash2, AlertTriangle, Monitor } from "lucide-react";
-import { getCurrentUserCompanies } from "@/app/d/[companyid]/actions";
 
 import {
   logoutUser,
@@ -27,10 +26,8 @@ import {
   deleteUserAccount,
 } from "@/app/(landing)/(auth)/actions";
 
-interface OwnedCompany {
-  companyid: string;
-  name: string | null;
-}
+import { getOwnedWorspaces } from "../actions";
+import { UserWorkspace } from "@/lib/db/tables/workspace";
 
 export function AccountSettings() {
   const { ttt } = useLanguage();
@@ -46,18 +43,18 @@ export function AccountSettings() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // State for owned companies
-  const [ownedCompanies, setOwnedCompanies] = useState<OwnedCompany[]>([]);
-  const [companiesToDelete, setCompaniesToDelete] = useState<string[]>([]);
+  const [ownedCompanies, setOwnedCompanies] = useState<UserWorkspace[]>([]);
+  const [workspacesToDelete, setWorkspacesToDelete] = useState<string[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
 
   const fetchOwnedCompanies = useCallback(async () => {
     setIsLoadingCompanies(true);
     try {
-      const result = await getCurrentUserCompanies();
-      if (result.error) {
-        setDeleteError(result.error);
+      const result = await getOwnedWorspaces();
+      if (result.success) {
+        setOwnedCompanies(result.data);
       } else {
-        setOwnedCompanies(result.ownedCompanies);
+        setDeleteError(ttt("Something went wrong, please contact support"));
       }
     } catch {
       setDeleteError(ttt("Something went wrong, please contact support"));
@@ -105,7 +102,7 @@ export function AccountSettings() {
 
     // Check if user has unhandled companies
     const unhandledCompanies = ownedCompanies.filter(
-      (company) => !companiesToDelete.includes(company.companyid)
+      (company) => !workspacesToDelete.includes(company.workspace.workspaceid)
     );
 
     if (unhandledCompanies.length > 0) {
@@ -119,7 +116,7 @@ export function AccountSettings() {
     setDeleteError(null);
 
     try {
-      const result = await deleteUserAccount(companiesToDelete);
+      const result = await deleteUserAccount(workspacesToDelete);
       if (result.success) {
         // Account deleted, user will be redirected
         window.location.href = "/";
@@ -133,18 +130,21 @@ export function AccountSettings() {
     }
   };
 
-  const handleCompanyDeleteToggle = (companyId: string, checked: boolean) => {
+  const handleWorkspaceDeleteToggle = (
+    workspaceId: string,
+    checked: boolean
+  ) => {
     if (checked) {
-      setCompaniesToDelete((prev) => [...prev, companyId]);
+      setWorkspacesToDelete((prev) => [...prev, workspaceId]);
     } else {
-      setCompaniesToDelete((prev) => prev.filter((id) => id !== companyId));
+      setWorkspacesToDelete((prev) => prev.filter((id) => id !== workspaceId));
     }
   };
 
   const canDelete =
     confirmDeleteText.toLowerCase() === ttt("delete") &&
     ownedCompanies.every((company) =>
-      companiesToDelete.includes(company.companyid)
+      workspacesToDelete.includes(company.workspace.workspaceid)
     );
 
   return (
@@ -248,25 +248,23 @@ export function AccountSettings() {
                             <div className="space-y-2">
                               {ownedCompanies.map((company) => (
                                 <label
-                                  key={company.companyid}
+                                  key={company.workspace.workspaceid}
                                   className="flex items-center space-x-2 text-sm"
                                 >
                                   <Checkbox
-                                    checked={companiesToDelete.includes(
-                                      company.companyid
+                                    checked={workspacesToDelete.includes(
+                                      company.workspace.workspaceid
                                     )}
                                     onCheckedChange={(checked) =>
-                                      handleCompanyDeleteToggle(
-                                        company.companyid,
+                                      handleWorkspaceDeleteToggle(
+                                        company.workspace.workspaceid,
                                         checked as boolean
                                       )
                                     }
                                   />
                                   <span className="text-amber-700">
                                     {ttt("Delete")}{" "}
-                                    <strong>
-                                      {company.name || ttt("Unnamed Company")}
-                                    </strong>
+                                    <strong>{company.workspace.name}</strong>
                                   </span>
                                 </label>
                               ))}
@@ -313,7 +311,7 @@ export function AccountSettings() {
                     onClick={() => {
                       setConfirmDeleteText("");
                       setDeleteError(null);
-                      setCompaniesToDelete([]);
+                      setWorkspacesToDelete([]);
                     }}
                   >
                     {ttt("Cancel")}

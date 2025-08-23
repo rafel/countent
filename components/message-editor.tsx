@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { Textarea } from './ui/textarea';
-import { deleteTrailingMessages } from '@/app/d/[companyid]/c/actions';
+import { deleteTrailingMessages } from '@/app/d/[workspaceid]/c/actions';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { ChatMessage } from '@/lib/types';
 import { getTextFromMessage } from '@/lib/utils';

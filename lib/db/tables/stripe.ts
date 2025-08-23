@@ -9,24 +9,14 @@ import {
   jsonb,
   uuid,
 } from "drizzle-orm/pg-core";
-import { SubscriptionModels } from "@/content/common";
+import { workspaces } from "./workspace";
 
 export type StripeMetadata = {
-  user_id?: string;
-  company_id?: string;
-  model?: SubscriptionModels;
-  subscriptionid?: string;
-};
-
-export type NewStripeMetadata = {
-  user_id: string;
-  company_id?: string;
-  model: SubscriptionModels;
-  subscriptionid: string;
+  workspaceid: typeof workspaces.$inferSelect.workspaceid;
 };
 
 export const stripecustomers = pgTable("stripecustomers", {
-  stripecustomerid: text("stripecustomerid").primaryKey(),
+  stripecustomerid: text("stripecustomerid").primaryKey().notNull(),
   name: text("name"),
   email: text("email"),
   active: boolean("active").default(true),
@@ -41,9 +31,8 @@ export type NewStripeCustomer = typeof stripecustomers.$inferInsert;
 export const stripesubscriptions = pgTable(
   "stripesubscriptions",
   {
-    stripesubscriptionid: text("stripesubscriptionid").primaryKey(),
-    stripecustomerid: text("stripecustomerid"),
-    stripecustomer: text("stripecustomer"),
+    stripesubscriptionid: text("stripesubscriptionid").primaryKey().notNull(),
+    stripecustomerid: text("stripecustomerid").notNull(),
     status: text("status"),
     plan: text("plan"),
     cancelatperiodend: boolean("cancelatperiodend"),
@@ -58,9 +47,7 @@ export const stripesubscriptions = pgTable(
     currency: text("currency"),
     interval: text("interval"),
     intervalcount: integer("intervalcount"),
-    subscriptionid: text("subscriptionid"),
-    userid: text("userid"),
-    companyid: text("companyid"),
+    workspaceid: uuid("workspaceid").notNull(),
     metadata: jsonb("metadata").default("{}").$type<StripeMetadata>(),
     active: boolean("active").default(true),
     createdat: timestamp("createdat").defaultNow().notNull(),
@@ -72,6 +59,11 @@ export const stripesubscriptions = pgTable(
         columns: [table.stripecustomerid],
         foreignColumns: [stripecustomers.stripecustomerid],
         name: "stripe_sub_customer_fk",
+      }).onDelete("no action"), // A subscription can have days left but no customer
+      workspaceFk: foreignKey({
+        columns: [table.workspaceid],
+        foreignColumns: [workspaces.workspaceid],
+        name: "stripe_sub_workspace_fk",
       }),
     };
   }
@@ -83,7 +75,7 @@ export type NewStripeSubscription = typeof stripesubscriptions.$inferInsert;
 export const stripeinvoices = pgTable(
   "stripeinvoices",
   {
-    stripeinvoiceid: text("stripeinvoiceid").primaryKey(),
+    stripeinvoiceid: text("stripeinvoiceid").primaryKey().notNull(),
     stripecustomerid: text("stripecustomerid"),
     amountdue: decimal("amountdue"),
     amountpaid: decimal("amountpaid"),
@@ -102,16 +94,10 @@ export const stripeinvoices = pgTable(
         columns: [table.stripecustomerid],
         foreignColumns: [stripecustomers.stripecustomerid],
         name: "stripe_inv_customer_fk",
-      }),
+      }).onDelete("no action"),
     };
   }
 );
 
 export type StripeInvoice = typeof stripeinvoices.$inferSelect;
 export type NewStripeInvoice = typeof stripeinvoices.$inferInsert;
-
-// Joined types for complex queries
-export type StripeSubscriptionWithCustomer = {
-  subscription: StripeSubscription;
-  customer: StripeCustomer;
-};

@@ -1,23 +1,16 @@
 "use server";
 
-import { db } from "@/lib/db";
-import {
-  users,
-  companies,
-  companyUsers,
-  companyInvites,
-  companyUserDuties,
-} from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
 import { getUser, auth } from "@/lib/user";
 import { signOut } from "@/lib/user";
 import {
   invalidateSession,
   invalidateAllUserSessions,
+  deleteUser,
 } from "@/lib/db/queries/user";
+import { deleteWorkspace, getUserWorkspaces } from "@/lib/db/queries/workspace";
 
 export async function deleteUserAccount(
-  companiesToDelete: string[]
+  workspacesToDelete: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const user = await getUser();
@@ -26,27 +19,17 @@ export async function deleteUserAccount(
     }
 
     // Get all companies where user is owner
-    const ownedCompanies = await db
-      .select({
-        companyid: companies.companyid,
-        name: companies.name,
-      })
-      .from(companyUsers)
-      .innerJoin(companies, eq(companyUsers.companyid, companies.companyid))
-      .where(
-        and(
-          eq(companyUsers.userid, user.userid),
-          eq(companyUsers.role, "owner")
-        )
-      );
+    const ownedWorkspaces = await getUserWorkspaces(user.userid, "owner");
 
     // Check if user has selected what to do with all owned companies
-    const ownedCompanyIds = ownedCompanies.map((c) => c.companyid);
-    const unhandledCompanies = ownedCompanyIds.filter(
-      (id) => !companiesToDelete.includes(id)
+    const ownedWorkspaceIds = ownedWorkspaces.map(
+      (w) => w.workspace.workspaceid
+    );
+    const unhandledWorkspaces = ownedWorkspaceIds.filter(
+      (id) => !workspacesToDelete.includes(id)
     );
 
-    if (unhandledCompanies.length > 0) {
+    if (unhandledWorkspaces.length > 0) {
       return {
         success: false,
         error:
@@ -55,9 +38,9 @@ export async function deleteUserAccount(
     }
 
     // Delete companies that user chose to delete
-    for (const companyId of companiesToDelete) {
+    for (const workspaceId of workspacesToDelete) {
       // Verify user owns this company
-      const isOwner = ownedCompanyIds.includes(companyId);
+      const isOwner = ownedWorkspaceIds.includes(workspaceId);
       if (!isOwner) {
         return {
           success: false,
@@ -65,41 +48,11 @@ export async function deleteUserAccount(
         };
       }
 
-      // Delete company data in correct order (due to foreign key constraints)
-      // 1. Delete company invites
-      await db
-        .delete(companyInvites)
-        .where(eq(companyInvites.companyid, companyId));
-
-      // 2. Delete company user duties
-      const companyUserIds = await db
-        .select({ companyuserid: companyUsers.companyuserid })
-        .from(companyUsers)
-        .where(eq(companyUsers.companyid, companyId));
-
-      for (const { companyuserid } of companyUserIds) {
-        await db
-          .delete(companyUserDuties)
-          .where(eq(companyUserDuties.companyuserid, companyuserid));
-      }
-
-      // 3. Delete company users
-      await db
-        .delete(companyUsers)
-        .where(eq(companyUsers.companyid, companyId));
-
-      // 4. Delete the company
-      await db.delete(companies).where(eq(companies.companyid, companyId));
+      await deleteWorkspace(user.userid, workspaceId);
     }
 
-    // Remove user from all remaining companies
-    await db.delete(companyUsers).where(eq(companyUsers.userid, user.userid));
-
-    // Delete user's invitations
-    await db.delete(companyInvites).where(eq(companyInvites.email, user.email));
-
     // Finally delete the user
-    await db.delete(users).where(eq(users.userid, user.userid));
+    await deleteUser(user.userid);
 
     return { success: true };
   } catch (error) {

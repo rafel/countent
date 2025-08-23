@@ -13,11 +13,10 @@ import enTranslations from "@/content/en/index";
 import svTranslations from "@/content/sv/index";
 import { UserLanguage } from "@/lib/db/tables/user";
 
-// Define available languages
-export const LANGUAGES = [
-  { id: "en", title: "English" },
-  { id: "sv", title: "Svenska" },
-] as const;
+import { LANGUAGES } from "@/content/common";
+
+// Re-export for backward compatibility
+export { LANGUAGES };
 
 // Define language type
 export type Language = UserLanguage;

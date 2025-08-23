@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { DefaultChatTransport } from 'ai';
-import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
-import useSWR, { useSWRConfig } from 'swr';
-import { ChatHeader } from '@/components/chat-header';
-import type { Vote } from '@/lib/db/tables/chat';
-import { fetcher, fetchWithErrorHandlers, generateUUID } from '@/lib/utils';
-import { Artifact } from './artifact';
-import { MultimodalInput } from './multimodal-input';
-import { Messages } from './messages';
-import type { VisibilityType } from './visibility-selector';
-import { useArtifactSelector } from '@/hooks/use-artifact';
-import { unstable_serialize } from 'swr/infinite';
-import { getChatHistoryPaginationKey } from './sidebar-history';
-import { toast } from './toast';
-import type { Session } from 'next-auth';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
-import { useAutoResume } from '@/hooks/use-auto-resume';
-import { ChatSDKError } from '@/lib/errors';
-import type { Attachment, ChatMessage } from '@/lib/types';
-import { useDataStream } from './data-stream-provider';
-import PricingDialog from './pricingdialog/pricingdialog';
+import { DefaultChatTransport } from "ai";
+import { useChat } from "@ai-sdk/react";
+import { useEffect, useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
+import { ChatHeader } from "@/components/chat-header";
+import type { Vote } from "@/lib/db/tables/chat";
+import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { Artifact } from "./artifact";
+import { MultimodalInput } from "./multimodal-input";
+import { Messages } from "./messages";
+import type { VisibilityType } from "./visibility-selector";
+import { useArtifactSelector } from "@/hooks/use-artifact";
+import { unstable_serialize } from "swr/infinite";
+import { getChatHistoryPaginationKey } from "./sidebar-history";
+import { toast } from "./toast";
+import type { Session } from "next-auth";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useAutoResume } from "@/hooks/use-auto-resume";
+import { ChatSDKError } from "@/lib/errors";
+import type { Attachment, ChatMessage } from "@/lib/types";
+import { useDataStream } from "./data-stream-provider";
+import PricingDialog from "./pricingdialog/pricingdialog";
 
 export function Chat({
   id,
@@ -32,7 +32,7 @@ export function Chat({
   isReadonly,
   session,
   autoResume,
-  companyid,
+  workspaceid,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -41,15 +41,15 @@ export function Chat({
   isReadonly: boolean;
   session: Session;
   autoResume: boolean;
-  companyid: string;
+  workspaceid: string;
 }) {
   const { mutate } = useSWRConfig();
   const { setDataStream } = useDataStream();
   const router = useRouter();
 
-  const [input, setInput] = useState<string>('');
+  const [input, setInput] = useState<string>("");
   const [showPricingDialog, setShowPricingDialog] = useState<boolean>(false);
-  
+
   // Track if this is a new chat (no initial messages) and if we've updated the URL
   const isNewChat = initialMessages.length === 0;
   const [hasUpdatedUrl, setHasUpdatedUrl] = useState<boolean>(false);
@@ -73,7 +73,7 @@ export function Chat({
     experimental_throttle: 100,
     generateId: generateUUID,
     transport: new DefaultChatTransport({
-      api: '/api/chat',
+      api: "/api/chat",
       fetch: fetchWithErrorHandlers,
       prepareSendMessagesRequest({ messages, id, body }) {
         return {
@@ -92,28 +92,32 @@ export function Chat({
     },
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
-      
+
       // For new chats, update the URL after the first message is complete
       if (isNewChat && !hasUpdatedUrl) {
         setHasUpdatedUrl(true);
-        // Refresh the chat list in the sidebar - use a pattern to match SWR Infinite keys
-        mutate(
-          key => typeof key === 'string' && key.startsWith('/api/chats'),
-          undefined,
-          { revalidate: true }
-        );
+
+        // Notify nav-chats component about the new chat
+        // Use a custom event to trigger revalidation in the nav-chats component
+        setTimeout(() => {
+          const event = new CustomEvent("newChatCreated", {
+            detail: { chatId: id, workspaceid },
+          });
+          window.dispatchEvent(event);
+        }, 100); // 100ms delay to ensure server processing
+
         // Update URL without page refresh - keeps same UI state
-        router.replace(`/d/${companyid}/c/${id}`, { scroll: false });
+        router.replace(`/d/${workspaceid}/c/${id}`, { scroll: false });
       }
     },
     onError: (error) => {
       if (error instanceof ChatSDKError) {
         // Check if it's a rate limit error
-        if (error.type === 'rate_limit' && error.surface === 'chat') {
+        if (error.type === "rate_limit" && error.surface === "chat") {
           setShowPricingDialog(true);
         } else {
           toast({
-            type: 'error',
+            type: "error",
             description: error.message,
           });
         }
@@ -122,25 +126,25 @@ export function Chat({
   });
 
   const searchParams = useSearchParams();
-  const query = searchParams.get('query');
+  const query = searchParams.get("query");
 
   const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
 
   useEffect(() => {
     if (query && !hasAppendedQuery) {
       sendMessage({
-        role: 'user' as const,
-        parts: [{ type: 'text', text: query }],
+        role: "user" as const,
+        parts: [{ type: "text", text: query }],
       });
 
       setHasAppendedQuery(true);
-      window.history.replaceState({}, '', `/d/${companyid}/c/${id}`);
+      window.history.replaceState({}, "", `/d/${workspaceid}/c/${id}`);
     }
-  }, [query, sendMessage, hasAppendedQuery, id, companyid]);
+  }, [query, sendMessage, hasAppendedQuery, id, workspaceid]);
 
   const { data: votes } = useSWR<Array<Vote>>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-    fetcher,
+    fetcher
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
@@ -189,7 +193,7 @@ export function Chat({
               setMessages={setMessages}
               sendMessage={sendMessage}
               selectedVisibilityType={visibilityType}
-              companyid={companyid}
+              workspaceid={workspaceid}
             />
           )}
         </form>
@@ -210,13 +214,13 @@ export function Chat({
         votes={votes}
         isReadonly={isReadonly}
         selectedVisibilityType={visibilityType}
-        companyid={companyid}
+        workspaceid={workspaceid}
       />
 
       <PricingDialog
         open={showPricingDialog}
         onOpenChange={setShowPricingDialog}
-        companyId={companyid}
+        workspaceid={workspaceid}
       />
     </>
   );

@@ -17,11 +17,11 @@ import { commonSettings } from "@/content/common";
 export function UserSettingsDialog({
   open,
   onOpenChange,
-  companyId,
+  workspaceid,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  companyId?: string;
+  workspaceid: string;
 }) {
   const { ttt } = useLanguage();
   const { currentDialog, closeDialog } = useSubscriptionDialog();
@@ -40,8 +40,8 @@ export function UserSettingsDialog({
             icon: CreditCard,
             component: (
               <SubscriptionBillingSection
-                companyId={companyId}
-                isCompanyContext={false}
+                workspaceid={workspaceid}
+                isWorkspaceContext={true}
               />
             ),
           },

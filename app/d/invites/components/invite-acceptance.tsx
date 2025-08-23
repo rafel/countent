@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -29,24 +24,23 @@ import {
   Building2,
 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { acceptInvite, declineInvite, redirectToDashboard } from "../actions";
 import {
-  acceptInvite,
-  declineInvite,
-  redirectToDashboard,
-  type PendingInviteWithCompany,
-} from "../functions/actions";
+  WorkspaceInvite,
+  WorkspaceInviteWithWorkspaceAndInviter,
+} from "@/lib/db/tables/workspace";
 
 export function InviteAcceptance({
   invites,
 }: {
-  invites: PendingInviteWithCompany[];
+  invites: WorkspaceInviteWithWorkspaceAndInviter[];
 }) {
   const { ttt } = useLanguage();
   const [remainingInvites, setRemainingInvites] = useState(invites);
   const [processingInvite, setProcessingInvite] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [inviteToDecline, setInviteToDecline] =
-    useState<PendingInviteWithCompany | null>(null);
+    useState<WorkspaceInviteWithWorkspaceAndInviter | null>(null);
 
   const getRoleIcon = (role: string) => {
     switch (role.toLowerCase()) {
@@ -74,7 +68,7 @@ export function InviteAcceptance({
     }
   };
 
-  const handleAccept = async (invite: PendingInviteWithCompany) => {
+  const handleAccept = async (invite: WorkspaceInvite) => {
     setProcessingInvite(invite.inviteid);
     setError(null);
 
@@ -155,7 +149,8 @@ export function InviteAcceptance({
       <div className="px-4 sm:px-0">
         <h1 className="text-3xl font-bold">{ttt("Company Invitations")}</h1>
         <p className="text-muted-foreground mb-4">
-          {ttt("You have an invitation")}, {ttt("Please review and respond to each invitation below.")}
+          {ttt("You have an invitation")},{" "}
+          {ttt("Please review and respond to each invitation below.")}
         </p>
       </div>
       <div className="space-y-6 px-4 sm:px-0">
@@ -178,7 +173,7 @@ export function InviteAcceptance({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                {invite.companyName}
+                {invite.workspace.name}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -206,7 +201,7 @@ export function InviteAcceptance({
                   <div className="text-sm">
                     <span className="font-medium">{ttt("Invited by")}:</span>
                     <div className="text-muted-foreground">
-                      {invite.inviterName || invite.inviterEmail}
+                      {invite.inviter.email} {invite.inviter.name}
                     </div>
                   </div>
                 </div>
@@ -246,8 +241,10 @@ export function InviteAcceptance({
             <AlertDialogHeader>
               <AlertDialogTitle>{ttt("Decline Invitation")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {ttt("Are you sure you want to decline the invitation?")}{' '}
-                {ttt("This action cannot be undone, and you would need to be invited again to join this company.")}
+                {ttt("Are you sure you want to decline the invitation?")}{" "}
+                {ttt(
+                  "This action cannot be undone, and you would need to be invited again to join this company."
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

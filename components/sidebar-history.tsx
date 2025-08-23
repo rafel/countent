@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/sidebar';
 import type { Chat } from '@/lib/db/tables/chat';
 import { fetcher } from '@/lib/utils';
-import { ChatItem } from './sidebar-history-item';
+import { ChatItem } from '@/components/sidebar-history-item';
 import useSWRInfinite from 'swr/infinite';
 import { LoaderIcon } from './icons';
 
@@ -93,7 +93,7 @@ export function getChatHistoryPaginationKey(
   return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
 }
 
-export function SidebarHistory({ user, companyid }: { user: User | undefined, companyid: string }) {
+export function SidebarHistory({ user, workspaceid }: { user: User | undefined, workspaceid: string }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
 
@@ -231,7 +231,7 @@ export function SidebarHistory({ user, companyid }: { user: User | undefined, co
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
-                            companyid={companyid}
+                            workspaceid={workspaceid}
                           />
                         ))}
                       </div>
@@ -252,7 +252,7 @@ export function SidebarHistory({ user, companyid }: { user: User | undefined, co
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
-                            companyid={companyid}
+                            workspaceid={workspaceid}
                           />
                         ))}
                       </div>
@@ -273,7 +273,7 @@ export function SidebarHistory({ user, companyid }: { user: User | undefined, co
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
-                            companyid={companyid}
+                            workspaceid={workspaceid}
                           />
                         ))}
                       </div>
@@ -294,7 +294,7 @@ export function SidebarHistory({ user, companyid }: { user: User | undefined, co
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
-                            companyid={companyid}
+                            workspaceid={workspaceid}
                           />
                         ))}
                       </div>
@@ -315,7 +315,7 @@ export function SidebarHistory({ user, companyid }: { user: User | undefined, co
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
-                            companyid={companyid}
+                            workspaceid={workspaceid}
                           />
                         ))}
                       </div>
